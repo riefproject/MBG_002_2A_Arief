@@ -27,52 +27,51 @@
             :headers="['id', 'Name', 'Kategori', 'Jumlah', 'Satuan', 'Tanggal Masuk', 'Tanggal Kadaluarsa', 'status', 'created at']"
             empty-message="Belum ada bahan baku yang terdaftar">
             
-            @foreach(App\Models\User::latest()->get() as $user)
-            <tr class="hover:bg-gray-50" data-user-id="{{ $user->id }}">
+            @foreach(App\Models\BahanBaku::latest()->get() as $bb)
+            <tr class="hover:bg-gray-50" data-user-id="{{ $bb->id }}">
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
                         <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
                             <span class="text-sm font-medium text-gray-700">
-                                {{ substr($user->name, 0, 1) }}
+                                {{ substr($bb->nama, 0, 1) }}
                             </span>
                         </div>
                         <div class="ml-4">
-                            <div class="text-sm font-medium text-gray-900 user-name">{{ $user->name }}</div>
-                            <div class="text-sm text-gray-500 user-email">{{ $user->email }}</div>
+                            <div class="text-sm font-medium text-gray-900 user-name">{{ $bb->nama }}</div>
                         </div>
                     </div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="user-role inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $user->role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800' }}">
-                        {{ ucfirst($user->role) }}
-                    </span>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {{ $bb->kategori }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {{ $user->created_at->format('d M Y') }}
-                    <div class="text-xs text-gray-400">{{ $user->created_at->diffForHumans() }}</div>
+                    {{ $bb->jumlah }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    @if($user->email_verified_at)
-                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                            Verified
-                        </span>
-                    @else
-                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                            Unverified
-                        </span>
-                    @endif
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {{ $bb->satuan }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {{ $bb->status }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {{ $bb->tanggal_masuk }}
+                    <div class="text-xs text-gray-400">{{ $bb->created_at->diffForHumans() }}</div>
+                </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {{ $bb->tanggal_kadaluarsa->format('d M Y') }}
+                    <div class="text-xs text-gray-400">{{ $bb->created_at->diffForHumans() }}</div>
+                </td>
+        <td class="px-6 py-4 whitespace-nowrap">
                     <x-table.actions 
-                        edit-url="{{ route('admin.users.update', $user) }}"
+                        edit-url="{{ route('admin.users.update', $bb) }}"
                         :edit-data="[
-                            'name' => $user->name,
-                            'email' => $user->email,
-                            'role' => $user->role
+                            'name' => $bb->nama,
+                            'email' => $bb->email,
+                            'role' => $bb->role
                         ]"
-                        delete-url="{{ route('admin.users.destroy', $user) }}"
-                        :delete-name="$user->name"
-                        :delete-id="$user->id" />
+                        delete-url="{{ route('admin.users.destroy', $bb) }}"
+                        :delete-name="$bb->nama"
+                        :delete-id="$bb->id" />
                 </td>
             </tr>
             @endforeach

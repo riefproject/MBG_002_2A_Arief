@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\BahanBaku;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
-class UserController extends Controller
+class BahanBakuController extends Controller
 {
     /**
      * Display a listing of users.
@@ -39,17 +39,13 @@ class UserController extends Controller
         ]);
 
         $bb = BahanBaku::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role' => $validated['role'],
-            'email_verified_at' => now(),
             'nama' => $validated['nama'],
             'kategori' => $validated['kategori'],
             'jumlah' => $validated['jumlah'],
             'satuan' => $validated['satuan'],
             'status' => $validated['status'],
-            'tanggal_masuk' => now();
+            'tanggal_masuk',
+            'tanggal_keluar' 
 
         ]);
 
@@ -57,40 +53,40 @@ class UserController extends Controller
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'User berhasil ditambahkan.',
+                'message' => 'BahanBaku berhasil ditambahkan.',
                 'data' => [
-                    'id' => $bb->id,
-                    'name' => $bb->name,
-                    'email' => $bb->email,
-                    'role' => $bb->role,
-                    'created_at' => $bb->created_at->format('d M Y'),
-                    'created_at_diff' => $bb->created_at->diffForHumans(),
-                    'email_verified_at' => $bb->email_verified_at,
+                    'nama' => $bb->nama,
+                    'kategori' => $bb->kategori,
+                    'jumlah' => $bb->jumlah,
+                    'satuan' => $bb->satuan,
+                    'status' => $bb->status,
+                    'tanggal_masuk' => $bb->tanggal_masuk->format('d M Y'),
+                    'tanggal_keluar' => $bb->tanggal_keluar->format('d M Y')
                 ]
             ]);
         }
-
         return redirect()
             ->route('admin.users.index')
-            ->with('success', 'User berhasil ditambahkan.');
+            ->with('success', 'BahanBaku berhasil ditambahkan.');
     }
 
     /**
      * Update the specified user.
      */
-    public function update(Request $request, User $bb)
+    public function update(Request $request, BahanBaku $bb)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($bb->id)],
-            'role' => ['required', Rule::in(['admin', 'user'])],
+            'nama' => 'required|string|max:50 ',
+            'kategori' => 'required|string|max:25',
+            'jumlah' => 'required|int|min:6',
+            'satuan' => 'required|string|max:50',
+            'status' =>['required', Rule::in(['tersedia', 'segera_kadaluarsa', 'kadaluarsa', 'habis'])],
         ], [
-            'name.required' => 'Nama harus diisi.',
-            'email.required' => 'Email harus diisi.',
-            'email.email' => 'Format email tidak valid.',
-            'email.unique' => 'Email sudah terdaftar.',
-            'role.required' => 'Role harus dipilih.',
-            'role.in' => 'Role tidak valid.',
+            'nama.required' => 'nama harus diisi',
+            'kategori.required' => 'kategori harus diisi',
+            'jumlah.required' => 'jumlah harus diisi',
+            'satuan.required' => 'satuan harus diisi',
+            'status.required' => 'status harus diisi'
         ]);
 
         $bb->update($validated);
@@ -99,7 +95,7 @@ class UserController extends Controller
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'User berhasil diupdate.',
+                'message' => 'BahanBaku berhasil diupdate.',
                 'data' => [
                     'id' => $bb->id,
                     'name' => $bb->name,
@@ -114,28 +110,14 @@ class UserController extends Controller
 
         return redirect()
             ->route('admin.users.index')
-            ->with('success', 'User berhasil diupdate.');
+            ->with('success', 'BahanBaku berhasil diupdate.');
     }
 
     /**
      * Remove the specified user.
      */
-    public function destroy(Request $request, User $bb)
+    public function destroy(Request $request, BahanBaku $bb)
     {
-        // Prevent deleting self
-        if ($bb->id === Auth::id()) {
-            if ($request->wantsJson() || $request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Anda tidak dapat menghapus akun sendiri.'
-                ], 400);
-            }
-
-            return redirect()
-                ->route('admin.users.index')
-                ->with('error', 'Anda tidak dapat menghapus akun sendiri.');
-        }
-
         $bbName = $bb->name;
         $bb->delete();
 
@@ -143,12 +125,12 @@ class UserController extends Controller
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => "User {$bbName} berhasil dihapus."
+                'message' => "BahanBaku {$bbName} berhasil dihapus."
             ]);
         }
 
         return redirect()
             ->route('admin.users.index')
-            ->with('success', 'User berhasil dihapus.');
+            ->with('success', 'BahanBaku berhasil dihapus.');
     }
 }
