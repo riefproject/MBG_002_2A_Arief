@@ -1,0 +1,143 @@
+/* Modal Improvements - Compact Layout */
+
+/* Base modal styling */
+.modal-backdrop {
+    backdrop-filter: blur(4px);
+}
+
+/* Compact form elements */
+.form-input-compact {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.form-label-compact {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+/* Modal content spacing */
+.modal-content-compact .mb-4 {
+    margin-bottom: 0.75rem !important;
+}
+
+.modal-content-compact .mb-3 {
+    margin-bottom: 0.5rem !important;
+}
+
+/* Button styling for modals */
+.modal-buttons {
+    gap: 0.75rem;
+}
+
+.modal-buttons .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+/* Icon sizing in modals */
+.modal-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+/* Responsive modal heights */
+@media (max-height: 600px) {
+    .modal-backdrop {
+        align-items: flex-start;
+        padding-top: 1rem;
+    }
+    
+    .modal-backdrop > div {
+        max-height: calc(100vh - 2rem);
+        margin-top: 0;
+    }
+}
+
+/* Custom scrollbar for modal content */
+.modal-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Animation improvements */
+.modal-backdrop.flex {
+    animation: modalFadeIn 0.15s ease-out;
+}
+
+.modal-backdrop.hidden {
+    animation: modalFadeOut 0.15s ease-in;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes modalFadeOut {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+}
+
+/* Form validation styling */
+.border-red-500 {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 1px #ef4444 !important;
+}
+
+.border-green-500 {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 1px #10b981 !important;
+}
+
+/* Loading state for buttons */
+.btn-loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.btn-loading::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
