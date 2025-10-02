@@ -5,6 +5,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class BahanBaku extends Model
 {
@@ -77,5 +78,10 @@ class BahanBaku extends Model
         }
 
         return $status;
+    }
+
+    public function permintaanDetails(): HasMany
+    {
+        return $this->hasMany(PermintaanDetail::class, 'bahan_id');
     }
 }

@@ -12,8 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('permintaan', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+            $table->increments('id');
+            $table->unsignedInteger('pemohon_id');
+            $table->date('tgl_masak');
+            $table->string('menu_makan', 255);
+            $table->unsignedSmallInteger('jumlah_porsi');
+            $table->enum('status', ['menunggu', 'disetujui', 'ditolak'])->default('menunggu');
+            $table->timestamp('created_at')->useCurrent();
+
+            $table->foreign('pemohon_id')
+                ->references('id')
+                ->on('users')
+                ->cascadeOnDelete();
         });
     }
 

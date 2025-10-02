@@ -114,6 +114,46 @@ class UserSeeder extends Seeder
                 'role' => 'gudang',
                 'created_at' => Carbon::now(),
             ],
+            [
+                'id' => 13,
+                'name' => 'Gudang A',
+                'email' => 'gudang.a@example.com',
+                'password' => Hash::make('gudang.a'),
+                'role' => 'gudang',
+                'created_at' => Carbon::now(),
+            ],
+            [
+                'id' => 14,
+                'name' => 'Gudang B',
+                'email' => 'gudang.b@example.com',
+                'password' => Hash::make('gudang.b'),
+                'role' => 'gudang',
+                'created_at' => Carbon::now(),
+            ],
+            [
+                'id' => 15,
+                'name' => 'Dapur A',
+                'email' => 'dapur.a@example.com',
+                'password' => Hash::make('dapur.a'),
+                'role' => 'dapur',
+                'created_at' => Carbon::now(),
+            ],
+            [
+                'id' => 16,
+                'name' => 'Dapur B',
+                'email' => 'dapur.b@example.com',
+                'password' => Hash::make('dapur.b'),
+                'role' => 'dapur',
+                'created_at' => Carbon::now(),
+            ],
+            [
+                'id' => 17,
+                'name' => 'Dapur C',
+                'email' => 'dapur.c@example.com',
+                'password' => Hash::make('dapur.c'),
+                'role' => 'dapur',
+                'created_at' => Carbon::now(),
+            ],
         ];
 
         DB::table('users')->upsert(
