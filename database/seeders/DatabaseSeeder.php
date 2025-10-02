@@ -14,17 +14,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create demo admin user
         User::factory()->create([
-            'name' => 'Administrator',
+            'name' => 'Admin Gudang',
             'email' => 'admin@example.com',
             'password' => bcrypt('password'),
             'role' => 'gudang',
         ]);
 
-        // Create demo regular user
         User::factory()->create([
-            'name' => 'Regular User',
+            'name' => 'Dapur User',
             'email' => 'user@example.com',
             'password' => bcrypt('password'),
             'role' => 'dapur',
@@ -32,23 +30,10 @@ class DatabaseSeeder extends Seeder
 
         User::factory(8)->create();
 
-        BahanBaku::factory()->create([
-            'nama' => 'Beras Medium',
-            'kategori' => 'Karbohidrat',
-            'jumlah' => 500,
-            'satuan' => 'kg',
-            'tanggal_masuk' => now(),
-            'status' => 'tersedia'
-        ])
-
-        BahanBaku::factory()->create([
-            'nama' => 'Telur Ayam',
-            'kategori' => 'Protein Hewani',
-            'jumlah' => 2000,
-            'satuan' => 'butir',
-            'tanggal_masuk' => now(),
-            'status' => 'tersedia'
-        ])
+        $this->call([
+            UserSeeder::class,
+            BahanBakuSeeder::class,
+        ]);
 
     }
 }

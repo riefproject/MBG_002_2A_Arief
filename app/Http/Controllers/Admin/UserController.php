@@ -25,8 +25,8 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'name' => 'required|string|max:100',
+            'email' => 'required|string|email|max:150|unique:users',
             'password' => 'required|string|min:6',
             'role' => ['required', Rule::in(['gudang', 'dapur'])],
         ], [
@@ -45,10 +45,9 @@ class UserController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
-            'email_verified_at' => now(), // Auto verify untuk demo
         ]);
 
-        // Return JSON response for AJAX requests
+        
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -60,7 +59,6 @@ class UserController extends Controller
                     'role' => $user->role,
                     'created_at' => $user->created_at->format('d M Y'),
                     'created_at_diff' => $user->created_at->diffForHumans(),
-                    'email_verified_at' => $user->email_verified_at,
                 ]
             ]);
         }
@@ -76,9 +74,9 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'role' => ['required', Rule::in(['admin', 'user'])],
+            'name' => 'required|string|max:100',
+            'email' => ['required', 'string', 'email', 'max:150', Rule::unique('users')->ignore($user->id)],
+            'role' => ['required', Rule::in(['gudang', 'dapur'])],
         ], [
             'name.required' => 'Nama harus diisi.',
             'email.required' => 'Email harus diisi.',
@@ -90,7 +88,7 @@ class UserController extends Controller
 
         $user->update($validated);
 
-        // Return JSON response for AJAX requests
+        
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -102,7 +100,6 @@ class UserController extends Controller
                     'role' => $user->role,
                     'created_at' => $user->created_at->format('d M Y'),
                     'created_at_diff' => $user->created_at->diffForHumans(),
-                    'email_verified_at' => $user->email_verified_at,
                 ]
             ]);
         }
@@ -134,7 +131,7 @@ class UserController extends Controller
         $userName = $user->name;
         $user->delete();
 
-        // Return JSON response for AJAX requests
+        
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,

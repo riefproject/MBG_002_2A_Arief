@@ -55,14 +55,13 @@ class EnhancedNavbarManager {
                 isActive = true;
             }
             else if (cleanCurrentPath.startsWith('/admin') && cleanLinkPath.includes('admin')) {
-                if (cleanCurrentPath.includes('/users') && cleanLinkPath.includes('/users')) {
+                if (cleanCurrentPath.includes('/bahan_baku') && cleanLinkPath.includes('/bahan_baku')) {
                     isActive = true;
                 } else if (cleanCurrentPath === '/admin/dashboard' && cleanLinkPath === '/admin/dashboard') {
                     isActive = true;
-                } else if (cleanCurrentPath.startsWith('/admin') && cleanLinkPath === '/admin/dashboard' && !activeFound) {
-                    if (!cleanCurrentPath.includes('/users')) {
-                        isActive = true;
-                    }
+                } else {
+                    // Untuk route admin lainnya, periksa apakah mereka terkait
+                    isActive = cleanCurrentPath.startsWith('/admin') && cleanLinkPath.startsWith('/admin');
                 }
             }
             else if ((cleanCurrentPath === '/dashboard' || cleanCurrentPath === '/') && cleanLinkPath === '/dashboard') {
@@ -75,12 +74,12 @@ class EnhancedNavbarManager {
             if (isActive) {
                 this.setActiveState(link);
                 activeFound = true;
-                console.log('✅ Set active:', cleanLinkPath, 'for current:', cleanCurrentPath);
+                console.log('Set active:', cleanLinkPath, 'for current:', cleanCurrentPath);
             }
         });
 
         if (!activeFound) {
-            console.log('⚠️ No active link found for:', currentPath);
+            console.log('No active link found for:', currentPath);
         }
     }
 
@@ -109,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 window.debugNavbar = function() {
-    console.log('🐛 Enhanced Navbar Debug:');
+    console.log('Enhanced Navbar Debug:');
     console.log('Current URL:', window.location.href);
     console.log('Current pathname:', window.location.pathname);
     
@@ -138,6 +137,6 @@ window.debugNavbar = function() {
 window.refreshNavbar = function() {
     if (window.enhancedNavbar) {
         window.enhancedNavbar.refresh();
-        console.log('🔄 Navbar manually refreshed');
+        console.log('Navbar manually refreshed');
     }
 };

@@ -30,34 +30,24 @@
                     <!-- Desktop Navigation -->
                     <div class="hidden sm:ml-6 sm:flex sm:space-x-1">
                         @auth
-                            <a href="{{ route('dashboard') }}"
-                               class="nav-link inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200 rounded-md border-b-2 border-transparent hover:border-blue-500 {{ request()->routeIs('dashboard') ? 'text-blue-600 border-blue-500 bg-blue-50' : '' }}">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v14H8V5z"></path>
-                                </svg>
+                                     <a href="{{ route('dashboard') }}"
+                                         class="nav-link inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200 rounded-md border-b-2 border-transparent hover:border-blue-500 {{ request()->routeIs('dashboard') || request()->routeIs('admin.*') ? 'text-blue-600 border-blue-500 bg-blue-50' : '' }}">
+                                <x-heroicon-o-home class="w-4 h-4 mr-2" />
                                 Dashboard
                             </a>
-                            
-                            @hasRole('gudang')
-                                <a href="{{ route('admin.users.index') }}"
-                                   class="nav-link inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200 rounded-md border-b-2 border-transparent hover:border-blue-500 {{ request()->routeIs('admin.users.*') ? 'text-blue-600 border-blue-500 bg-blue-50' : '' }}">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                                    </svg>
-                                    Manajemen User
-                                </a>
-                                
-                                <a href="{{ route('admin.dashboard') }}"
-                                   class="nav-link inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200 rounded-md border-b-2 border-transparent hover:border-blue-500 {{ request()->routeIs('admin.dashboard') ? 'text-blue-600 border-blue-500 bg-blue-50' : '' }}">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                                    </svg>
-                                    Admin Panel
-                                </a>
-                            @endhasRole
                         @endauth
                     </div>
+                    @hasRole('gudang')
+                        <div class="hidden sm:ml-6 sm:flex sm:space-x-1">
+                            @auth
+                                        <a href="{{ route('admin.bahan_baku') }}"
+                                            class="nav-link inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200 rounded-md border-b-2 border-transparent hover:border-blue-500 {{ request()->routeIs('dashboard') || request()->routeIs('admin.*') ? 'text-blue-600 border-blue-500 bg-blue-50' : '' }}">
+                                    <x-heroicon-o-home class="w-4 h-4 mr-2" />
+                                    Management Bahan Baku
+                                </a>
+                            @endauth
+                        </div>
+                    @endhasRole
                 </div>
 
                 <!-- User Menu & Mobile Menu Button -->
@@ -66,9 +56,7 @@
                         <!-- Profile Link -->
                         <a href="{{ route('profile') }}"
                            class="nav-link inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200 rounded-md border-b-2 border-transparent hover:border-blue-500 {{ request()->routeIs('profile') ? 'text-blue-600 border-blue-500 bg-blue-50' : '' }}">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                            </svg>
+                            <x-heroicon-o-user class="w-4 h-4 mr-2" />
                             Profile
                         </a>
                         
@@ -82,9 +70,7 @@
                                         {{ substr(Auth::user()->name, 0, 1) }}
                                     </span>
                                 </div>
-                                <svg class="ml-2 h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                </svg>
+                                <x-heroicon-o-chevron-down class="ml-2 h-4 w-4 text-gray-600" />
                             </button>
 
                             <div x-show="open" @click.away="open = false"
@@ -106,9 +92,7 @@
                                         @csrf
                                         <button type="submit" 
                                                 class="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-200">
-                                            <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                                            </svg>
+                                            <x-heroicon-o-arrow-right-on-rectangle class="w-4 h-4 mr-3" />
                                             Logout
                                         </button>
                                     </form>
@@ -118,9 +102,7 @@
                     @else
                         <a href="{{ route('login') }}" 
                            class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors duration-200 shadow-md hover:shadow-lg">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                            </svg>
+                            <x-heroicon-o-arrow-left-on-rectangle class="w-4 h-4 mr-2" />
                             Login
                         </a>
                     @endauth
@@ -131,14 +113,8 @@
                     <button @click="mobileMenuOpen = !mobileMenuOpen"
                             class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">
                         <span class="sr-only">Buka menu utama</span>
-                        <svg class="h-6 w-6" :class="{ 'hidden': mobileMenuOpen, 'block': !mobileMenuOpen }" 
-                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                        <svg class="h-6 w-6" :class="{ 'block': mobileMenuOpen, 'hidden': !mobileMenuOpen }" 
-                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <x-heroicon-o-bars-3 class="h-6 w-6" x-show="!mobileMenuOpen" />
+                        <x-heroicon-o-x-mark class="h-6 w-6" x-show="mobileMenuOpen" />
                     </button>
                 </div>
             </div>
@@ -155,38 +131,15 @@
              class="sm:hidden">
             <div class="pt-2 pb-3 space-y-1 bg-white border-t border-gray-200">
                 @auth
-                    <a href="{{ route('dashboard') }}"
-                       class="mobile-nav-link flex items-center pl-3 pr-4 py-3 text-base font-medium transition-colors duration-200 {{ request()->routeIs('dashboard') ? 'text-blue-600 bg-blue-50 border-r-4 border-blue-600' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v14H8V5z"></path>
-                        </svg>
+                          <a href="{{ route('dashboard') }}"
+                              class="mobile-nav-link flex items-center pl-3 pr-4 py-3 text-base font-medium transition-colors duration-200 {{ request()->routeIs('dashboard') || request()->routeIs('admin.*') ? 'text-blue-600 bg-blue-50 border-r-4 border-blue-600' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
+                        <x-heroicon-o-home class="w-5 h-5 mr-3" />
                         Dashboard
                     </a>
                     
-                    @hasRole('admin')
-                        <a href="{{ route('admin.users.index') }}"
-                           class="mobile-nav-link flex items-center pl-3 pr-4 py-3 text-base font-medium transition-colors duration-200 {{ request()->routeIs('admin.users.*') ? 'text-blue-600 bg-blue-50 border-r-4 border-blue-600' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                            </svg>
-                            Manajemen User
-                        </a>
-                        
-                        <a href="{{ route('admin.dashboard') }}"
-                           class="mobile-nav-link flex items-center pl-3 pr-4 py-3 text-base font-medium transition-colors duration-200 {{ request()->routeIs('admin.dashboard') ? 'text-blue-600 bg-blue-50 border-r-4 border-blue-600' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                            </svg>
-                            Admin Panel
-                        </a>
-                    @endhasRole
-                    
                     <a href="{{ route('profile') }}"
                        class="mobile-nav-link flex items-center pl-3 pr-4 py-3 text-base font-medium transition-colors duration-200 {{ request()->routeIs('profile') ? 'text-blue-600 bg-blue-50 border-r-4 border-blue-600' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                        </svg>
+                        <x-heroicon-o-user class="w-5 h-5 mr-3" />
                         Profile
                     </a>
                 @endauth
@@ -213,9 +166,7 @@
                             @csrf
                             <button type="submit" 
                                     class="flex items-center w-full text-left px-4 py-2 text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors duration-200">
-                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                                </svg>
+                                <x-heroicon-o-arrow-right-on-rectangle class="w-5 h-5 mr-3" />
                                 Logout
                             </button>
                         </form>
@@ -225,9 +176,7 @@
                 <div class="pt-4 pb-3 border-t border-gray-200 bg-gray-50">
                     <a href="{{ route('login') }}" 
                        class="flex items-center px-4 py-2 text-base font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md mx-4 transition-colors duration-200 shadow-md">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                        </svg>
+                        <x-heroicon-o-arrow-left-on-rectangle class="w-5 h-5 mr-3" />
                         Login
                     </a>
                 </div>

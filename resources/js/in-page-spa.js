@@ -26,7 +26,7 @@ class InPageSPA {
                 window.Alpine.initTree(element);
             }
             
-            console.log('✅ Content section updated:', selector);
+            console.log('Content section updated:', selector);
         }
     }
 

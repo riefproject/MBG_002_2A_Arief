@@ -22,7 +22,9 @@
         </label>
     @endif
 
-    <input id="{{ $id ?? ($name . '_' . uniqid()) }}"
+    @php $inputId = $id ?? ($name . '_' . uniqid()); @endphp
+
+    <input id="{{ $inputId }}"
            name="{{ $name }}"
            type="{{ $type }}"
            value="{{ old($name, $value) }}"
@@ -36,14 +38,14 @@
                ($name === 'name' ? 'name' : 'off')) 
            }}"
            @if($validation && $required)
-               class="input-wajib-validasi border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm block w-full {{ $disabled || $readonly ? 'bg-gray-100' : '' }}"
+               class="input-wajib-validasi border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm block w-full px-4 py-2 {{ $disabled || $readonly ? 'bg-gray-100' : '' }}"
            @else
-               class="border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm block w-full {{ $disabled || $readonly ? 'bg-gray-100' : '' }}"
+               class="border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm block w-full px-4 py-2 {{ $disabled || $readonly ? 'bg-gray-100' : '' }}"
            @endif
            {{ $attributes }}>
 
     <!-- Error Message Container -->
-    <div class="pesan-error text-red-500 text-sm mt-1">
+    <div class="pesan-error text-red-500 text-sm mt-1" data-error-for="{{ $inputId }}">
         @error($name){{ $message }}@enderror
     </div>
 

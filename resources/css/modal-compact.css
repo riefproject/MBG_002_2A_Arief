@@ -1,5 +1,3 @@
-/* Modal Improvements - Compact Layout */
-
 /* Base modal styling */
 .modal-backdrop {
     backdrop-filter: blur(4px);
@@ -36,7 +34,7 @@
     font-size: 0.875rem;
 }
 
-/* Icon sizing in modals */
+/* Icon sizing di modals */
 .modal-icon {
     width: 2.5rem;
     height: 2.5rem;
@@ -55,7 +53,7 @@
     }
 }
 
-/* Custom scrollbar for modal content */
+/* Custom scrollbar untuk modal content */
 .modal-content::-webkit-scrollbar {
     width: 6px;
 }
@@ -74,7 +72,7 @@
     background: #a8a8a8;
 }
 
-/* Animation improvements */
+/* Animation */
 .modal-backdrop.flex {
     animation: modalFadeIn 0.15s ease-out;
 }

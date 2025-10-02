@@ -1,14 +1,11 @@
 <?php
 
 if (!function_exists('spa_view')) {
-    /**
-     * Helper function to return appropriate view for SPA or regular requests
-     *
-     * @param string $regularView
-     * @param string $spaView
-     * @param array $data
-     * @return \Illuminate\View\View|\Illuminate\Contracts\View\Factory
-     */
+    /* 
+     * Fungsi ini membantu mengembalikan view yang sesuai berdasarkan jenis permintaan (SPA atau reguler).
+     * Jika permintaan adalah SPA (ditandai dengan header 'X-SPA-Request'), maka view khusus SPA akan dikembalikan.
+     * Jika tidak, view reguler akan dikembalikan.    
+    */
     function spa_view($regularView, $spaView = null, $data = [])
     {
         $isSpaRequest = request()->header('X-SPA-Request');
@@ -22,11 +19,6 @@ if (!function_exists('spa_view')) {
 }
 
 if (!function_exists('is_spa_request')) {
-    /**
-     * Check if current request is an SPA request
-     *
-     * @return bool
-     */
     function is_spa_request()
     {
         return request()->header('X-SPA-Request') !== null;

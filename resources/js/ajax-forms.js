@@ -52,7 +52,7 @@ window.showNotification = function(message, type = 'success') {
         notification.classList.remove('translate-x-full');
     }, 100);
     
-    // Auto hide after 5 seconds
+    // Auto hide setelah 5 detik
     setTimeout(() => {
         notification.classList.add('translate-x-full');
         setTimeout(() => {
@@ -63,14 +63,41 @@ window.showNotification = function(message, type = 'success') {
     }, 5000);
 };
 
+const escapeHtml = (value) => {
+    if (value === null || value === undefined) {
+        return '';
+    }
+
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+};
+
+const humanizeValue = (value) => {
+    if (!value) {
+        return '-';
+    }
+
+    return value.toString()
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
 // Global loading state handler
 window.setFormLoading = function(form, loading = true) {
     const submitButton = form.querySelector('button[type="submit"]');
     const inputs = form.querySelectorAll('input, textarea, select, button');
     
+    if (!submitButton) {
+        return;
+    }
+
     if (loading) {
         submitButton.disabled = true;
-        submitButton.dataset.originalText = submitButton.textContent;
+        submitButton.dataset.originalInner = submitButton.innerHTML;
         submitButton.innerHTML = `
             <svg class="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -79,21 +106,20 @@ window.setFormLoading = function(form, loading = true) {
             Processing...
         `;
         inputs.forEach(input => {
-            if (input.type !== 'submit') input.disabled = true;
+            if (!['submit', 'button'].includes(input.type) || input === submitButton) {
+                input.disabled = true;
+            }
         });
     } else {
         submitButton.disabled = false;
         // Restore original button text
-        const originalText = submitButton.dataset.originalText || 
-                           (form.id.includes('edit') ? 'Update User' :
-                           form.id.includes('tambah') ? 'Simpan User' :
-                           form.id.includes('password') ? 'Update Password' :
-                           form.id.includes('profile') ? 'Update Profile' :
-                           form.id.includes('hapus') ? 'Ya, Hapus' :
-                           'Simpan');
-        submitButton.textContent = originalText;
+        if (submitButton.dataset.originalInner) {
+            submitButton.innerHTML = submitButton.dataset.originalInner;
+        }
         inputs.forEach(input => {
-            if (input.type !== 'submit') input.disabled = false;
+            if (input !== submitButton) {
+                input.disabled = false;
+            }
         });
     }
 };
@@ -101,7 +127,11 @@ window.setFormLoading = function(form, loading = true) {
 // Clear form errors
 window.clearFormErrors = function(form) {
     const errorElements = form.querySelectorAll('.pesan-error');
-    errorElements.forEach(el => el.textContent = '');
+    errorElements.forEach(el => {
+        el.textContent = '';
+        el.classList.remove('text-green-500');
+        el.classList.add('text-red-500');
+    });
     
     const inputElements = form.querySelectorAll('input, textarea, select');
     inputElements.forEach(el => {
@@ -113,127 +143,177 @@ window.clearFormErrors = function(form) {
 window.displayFormErrors = function(form, errors) {
     Object.keys(errors).forEach(fieldName => {
         const field = form.querySelector(`[name="${fieldName}"]`);
-        if (field) {
-            const errorElement = field.nextElementSibling;
-            if (errorElement && errorElement.classList.contains('pesan-error')) {
-                errorElement.textContent = errors[fieldName][0];
-                errorElement.className = 'pesan-error text-red-500 text-sm mt-1';
-            }
-            field.classList.add('border-red-500');
-            field.classList.remove('border-green-500');
+        if (!field) {
+            return;
         }
+
+        const errorElement = form.querySelector(`[data-error-for="${field.id}"]`) || field.nextElementSibling;
+        if (errorElement && errorElement.classList.contains('pesan-error')) {
+            errorElement.textContent = errors[fieldName][0];
+            errorElement.classList.remove('text-green-500');
+            errorElement.classList.add('text-red-500');
+        }
+
+        field.classList.add('border-red-500');
+        field.classList.remove('border-green-500');
     });
 };
 
-// Update table row for users
-window.updateUserTableRow = function(user) {
-    const row = document.querySelector(`tr[data-user-id="${user.id}"]`);
-    if (row) {
-        // Update name and email
-        const nameCell = row.querySelector('.user-name');
-        const emailCell = row.querySelector('.user-email');
-        const roleCell = row.querySelector('.user-role');
-        
-        if (nameCell) nameCell.textContent = user.name;
-        if (emailCell) emailCell.textContent = user.email;
-        if (roleCell) {
-            roleCell.textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
-            roleCell.className = `inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
-            }`;
-        }
-        
-        // Update action buttons data attributes
-        const editButton = row.querySelector('.tombol-edit-native');
-        const deleteButton = row.querySelector('.tombol-hapus-native');
-        
-        if (editButton) {
-            editButton.dataset.name = user.name;
-            editButton.dataset.email = user.email;
-            editButton.dataset.role = user.role;
-        }
-        
-        if (deleteButton) {
-            deleteButton.dataset.nama = user.name;
-        }
-    }
-};
 
-// Add new user row to table
-window.addUserTableRow = function(user) {
-    const tbody = document.querySelector('table tbody');
-    if (tbody) {
-        // Check if empty state message exists and remove it
-        const emptyMessage = tbody.querySelector('tr td[colspan]');
-        if (emptyMessage) {
-            emptyMessage.closest('tr').remove();
+
+const bahanBakuTable = {
+    tableSelector: '#tabel-bahan-baku',
+
+    getTable() {
+        return document.querySelector(this.tableSelector);
+    },
+
+    getTbody() {
+        const table = this.getTable();
+        return table ? table.querySelector('tbody') : null;
+    },
+
+    hydrateRow(row, data) {
+        if (!row || !data) {
+            return;
         }
-        
-        const newRow = document.createElement('tr');
-        newRow.className = 'hover:bg-gray-50';
-        newRow.dataset.userId = user.id;
-        
-        const editUrl = window.location.origin + '/admin/users/' + user.id;
-        const deleteUrl = window.location.origin + '/admin/users/' + user.id;
-        
-        newRow.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center">
-                    <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                        <span class="text-sm font-medium text-gray-700">
-                            ${user.name.charAt(0).toUpperCase()}
-                        </span>
-                    </div>
-                    <div class="ml-4">
-                        <div class="text-sm font-medium text-gray-900 user-name">${user.name}</div>
-                        <div class="text-sm text-gray-500 user-email">${user.email}</div>
-                    </div>
-                </div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <span class="user-role inline-flex px-2 py-1 text-xs font-semibold rounded-full ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}">
-                    ${user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                </span>
-            </td>
+
+        const formatDate = (value, fallback = '-') => {
+            if (!value) {
+                return fallback;
+            }
+
+            if (value instanceof Date) {
+                return value.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+            }
+
+            return value;
+        };
+
+        this.renderRow(row, data);
+    },
+
+    createRow(data) {
+        const tbody = this.getTbody();
+        if (!tbody) {
+            return null;
+        }
+
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50';
+        row.dataset.bahanBakuId = data.id;
+
+        this.renderRow(row, data);
+
+        tbody.insertBefore(row, tbody.firstChild);
+        document.dispatchEvent(new Event('bahan-baku:table-updated'));
+
+        return row;
+    },
+
+    renderRow(row, data) {
+        if (!row || !data) {
+            return;
+        }
+
+        const tanggalMasuk = escapeHtml(data.tanggal_masuk_label || data.tanggal_masuk || '-');
+        const tanggalKadaluarsa = escapeHtml(data.tanggal_kadaluarsa_label || data.tanggal_kadaluarsa || '-');
+        const statusRaw = data.status_label || data.status;
+        const statusLabel = escapeHtml(humanizeValue(statusRaw));
+        const jumlahLabel = escapeHtml(data.jumlah_label || `${data.jumlah} ${data.satuan}`);
+        const nama = escapeHtml(data.nama);
+        const kategori = escapeHtml(data.kategori);
+        const jumlah = escapeHtml(data.jumlah);
+        const satuan = escapeHtml(data.satuan);
+        const statusValue = escapeHtml(data.status);
+        const viewUrl = escapeHtml(data.view_url || '');
+        const editUrl = escapeHtml(data.edit_url || '');
+        const deleteUrl = escapeHtml(data.delete_url || '');
+        const id = escapeHtml(data.id);
+        const canDelete = data.can_delete ? 'true' : 'false';
+
+        row.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap">${nama}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${kategori}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${jumlah}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${satuan}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${tanggalMasuk}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${tanggalKadaluarsa}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                ${user.created_at}
-                <div class="text-xs text-gray-400">${user.created_at_diff}</div>
+                <span class="capitalize">${statusLabel}</span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-                ${user.email_verified_at ? 
-                    '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Verified</span>' :
-                    '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Unverified</span>'
-                }
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <div class="flex items-center space-x-2">
-                    <button class="tombol-edit-native text-blue-600 hover:text-blue-900 text-sm font-medium"
+                <div class="flex items-center space-x-1">
+                    ${viewUrl ? `
+                        <a href="${viewUrl}" 
+                           class="inline-flex items-center px-2 py-1 border border-gray-300 rounded text-xs font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition ease-in-out duration-150">
+                            <svg class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            Lihat
+                        </a>
+                    ` : ''}
+                    <button type="button"
+                            class="tombol-edit-native inline-flex items-center px-2 py-1 border border-blue-300 rounded text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition ease-in-out duration-150"
                             data-action="${editUrl}"
-                            data-name="${user.name}"
-                            data-email="${user.email}"
-                            data-role="${user.role}">
+                            data-id="${id}"
+                            data-nama="${nama}"
+                            data-kategori="${kategori}"
+                            data-jumlah="${jumlah}"
+                            data-satuan="${satuan}"
+                            data-jumlah-label="${jumlahLabel}"
+                            data-status="${statusValue}"
+                            data-status-label="${statusLabel}"
+                            data-tanggal-masuk-label="${tanggalMasuk}"
+                            data-tanggal-kadaluarsa-label="${tanggalKadaluarsa}">
+                        <svg class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652l-1.688 1.687m-2.651-2.651L8.25 15.75M19.5 19.5h-15" />
+                        </svg>
                         Edit
                     </button>
-                    <button class="tombol-hapus-native text-red-600 hover:text-red-900 text-sm font-medium ml-3"
+                    <button type="button"
+                            class="tombol-hapus-native inline-flex items-center px-2 py-1 border border-red-300 rounded text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition ease-in-out duration-150"
                             data-action="${deleteUrl}"
-                            data-nama="${user.name}"
-                            data-id="${user.id}">
+                            data-nama="${nama}"
+                            data-id="${id}"
+                            data-kategori="${kategori}"
+                            data-jumlah="${jumlah}"
+                            data-satuan="${satuan}"
+                            data-jumlah-label="${jumlahLabel}"
+                            data-status="${statusValue}"
+                            data-status-label="${statusLabel}"
+                            data-tanggal-masuk-label="${tanggalMasuk}"
+                            data-tanggal-kadaluarsa-label="${tanggalKadaluarsa}"
+                            data-can-delete="${canDelete}">
+                        <svg class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                         Hapus
                     </button>
                 </div>
             </td>
         `;
-        
-        // Add to top of table
-        tbody.insertBefore(newRow, tbody.firstChild);
-    }
-};
+    },
 
-// Remove user row from table
-window.removeUserTableRow = function(userId) {
-    const row = document.querySelector(`tr[data-user-id="${userId}"]`);
-    if (row) {
-        row.remove();
+    updateRow(data) {
+        const row = document.querySelector(`tr[data-bahan-baku-id="${data.id}"]`);
+        if (!row) {
+            return this.createRow(data);
+        }
+
+        this.renderRow(row, data);
+        document.dispatchEvent(new Event('bahan-baku:table-updated'));
+
+        return row;
+    },
+
+    removeRow(id) {
+        const row = document.querySelector(`tr[data-bahan-baku-id="${id}"]`);
+        if (row) {
+            row.remove();
+            document.dispatchEvent(new Event('bahan-baku:table-updated'));
+        }
     }
 };
 
@@ -241,11 +321,11 @@ window.removeUserTableRow = function(userId) {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('AJAX Forms handler loaded');
     
-    // Handle all form submissions with AJAX
+    // Handle semua form submissions with AJAX
     document.body.addEventListener('submit', function(event) {
         const form = event.target;
         
-        // Only handle forms with ajax-form class or specific form IDs
+        // Hanya tangani form dengan kelas ajax-form atau ID form tertentu
         const isAjaxForm = form.classList.contains('ajax-form') || 
                           form.id === 'form-tambah' || 
                           form.id === 'form-edit' || 
@@ -257,7 +337,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Skip login form and other non-CRUD forms
+        // Skip login dan non CRUD forms
         if (form.id === 'login-form' || form.closest('#login-form')) {
             return;
         }
@@ -271,41 +351,37 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         form.dataset.submitting = 'true';
         
-        // Clear previous errors
         clearFormErrors(form);
-        
-        // Set loading state
         setFormLoading(form, true);
         
-        // Prepare form data
         const formData = new FormData(form);
-        const method = form.method.toLowerCase();
+        const overrideMethod = formData.get('_method');
+        const method = (overrideMethod || form.method).toLowerCase();
         const action = form.action;
         
-        // Add AJAX headers
+        // AJAX headers
         const headers = {
             'X-Requested-With': 'XMLHttpRequest',
             'Accept': 'application/json',
         };
         
-        // Add CSRF token if not already in FormData
+        // Tambahkan token CSRF jika belum ada di FormData
         const csrfToken = form.querySelector('input[name="_token"]') || 
                          document.querySelector('meta[name="csrf-token"]');
         if (csrfToken) {
             headers['X-CSRF-TOKEN'] = csrfToken.value || csrfToken.getAttribute('content');
         }
         
-        // Make AJAX request
         fetch(action, {
-            method: method.toUpperCase(),
-            body: formData,
+            method: overrideMethod ? overrideMethod.toUpperCase() : form.method.toUpperCase(),
+            body: method === 'get' ? null : formData,
             headers: headers
         })
         .then(response => {
             return response.json().then(data => ({
                 ok: response.ok,
                 status: response.status,
-                data: data
+                data
             }));
         })
         .then(result => {
@@ -313,35 +389,33 @@ document.addEventListener('DOMContentLoaded', function() {
             form.dataset.submitting = 'false';
             
             if (result.ok) {
-                // Success handling
-                showNotification(result.data.message, 'success');
-                
-                // Handle different form types
-                if (form.id === 'form-tambah') {
-                    // Add new user to table
-                    addUserTableRow(result.data.data);
-                    // Close modal and reset form
-                    if (window.closeModal) {
-                        closeModal('modal-tambah');
-                    }
-                } else if (form.id === 'form-edit') {
-                    // Update existing user in table
-                    updateUserTableRow(result.data.data);
-                    // Close modal
-                    if (window.closeModal) {
-                        closeModal('modal-edit');
-                    }
-                } else if (form.id === 'form-hapus') {
-                    // Remove user from table
-                    const formAction = form.action;
-                    const userId = formAction.substring(formAction.lastIndexOf('/') + 1);
-                    removeUserTableRow(userId);
-                    // Close modal
-                    if (window.closeModal) {
-                        closeModal('modal-hapus');
+                const responsePayload = result.data;
+                showNotification(responsePayload.message, 'success');
+            
+                if (form.dataset.entity === 'bahan-baku') {
+                    const responseData = responsePayload.data;
+                    if (form.id === 'form-tambah') {
+                        bahanBakuTable.createRow(responseData);
+                        if (window.closeModal) {
+                            closeModal('modal-tambah');
+                        }
+                        form.reset();
+                    } else if (form.id === 'form-edit') {
+                        bahanBakuTable.updateRow(responseData);
+                        if (window.closeModal) {
+                            closeModal('modal-edit');
+                        }
+                    } else if (form.id === 'form-hapus') {
+                        const targetId = responseData?.id || form.dataset.targetId;
+                        if (targetId) {
+                            bahanBakuTable.removeRow(targetId);
+                        }
+                        if (window.closeModal) {
+                            closeModal('modal-hapus');
+                        }
                     }
                 } else if (form.id === 'update-profile-form') {
-                    // Update profile info in header dropdown
+                    // Update profile info ke header dropdown
                     const headerName = document.querySelector('.py-1 .font-medium');
                     const headerEmail = document.querySelector('.py-1 .text-xs');
                     if (headerName && result.data.data) {
@@ -350,7 +424,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (headerEmail && result.data.data) {
                         headerEmail.textContent = result.data.data.email;
                     }
-                    // Also update the avatar initial
+                    // Also update avatar initial
                     const avatarInitial = document.querySelector('.h-8.w-8 .text-sm');
                     if (avatarInitial && result.data.data) {
                         avatarInitial.textContent = result.data.data.name.charAt(0).toUpperCase();
@@ -375,7 +449,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('AJAX Error:', error);
             setFormLoading(form, false);
             form.dataset.submitting = 'false';
-            showNotification('An unexpected error occurred. Please try again.', 'error');
+            showNotification('Terjadi kesalahan. Silakan coba lagi.', 'error');
         });
     });
 });

@@ -27,7 +27,6 @@ class ProfileController extends Controller
 
         $user->update($validated);
 
-        // Return JSON response for AJAX requests
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -45,7 +44,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Update the user's password.
+     * Update pw
      */
     public function updatePassword(Request $request)
     {
@@ -61,7 +60,6 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
-        // Verify current password
         if (!Hash::check($validated['current_password'], $user->password)) {
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json([
@@ -81,7 +79,6 @@ class ProfileController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        // Return JSON response for AJAX requests
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,

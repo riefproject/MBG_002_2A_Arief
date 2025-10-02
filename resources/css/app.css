@@ -44,7 +44,7 @@
     color: #2563eb;
 }
 
-/* Mobile nav enhancements */
+/* Mobile navß */
 .mobile-nav-link {
     position: relative;
     transition: all 0.2s ease-in-out;
@@ -58,7 +58,7 @@
     background: linear-gradient(90deg, rgba(59, 130, 246, 0.1), transparent);
 }
 
-/* User dropdown enhancements */
+/* User dropdown*/
 .user-dropdown {
     backdrop-filter: blur(10px);
     background: rgba(255, 255, 255, 0.95);

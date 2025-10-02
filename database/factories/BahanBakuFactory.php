@@ -2,20 +2,15 @@
 
 namespace Database\Factories;
 
+use App\Models\BahanBaku;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use Illuminate\Support\Carbon;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\BahanBaku>
  */
-class UserFactory extends Factory
+class BahanBakuFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
-    protected static ?string $password;
-
     /**
      * Define the model's default state.
      *
@@ -23,22 +18,20 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
-        return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'password' => static::$password ??= Hash::make('password'),
-            'role' => fake()->randomElement(['gudang', 'dapur']),
-            'remember_token' => Str::random(10),
-        ];
-    }
+        $tanggalMasuk = Carbon::instance(fake()->dateTimeBetween('-30 days', '-1 day'));
+        $tanggalKadaluarsa = Carbon::instance(fake()->dateTimeBetween('now', '+45 days'));
+        $jumlah = fake()->numberBetween(0, 500);
+        $satuan = fake()->randomElement(['kg', 'liter', 'gram', 'pcs', 'pack']);
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
-    public function unverified(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
-        ]);
+        return [
+            'nama' => fake()->words(3, true),
+            'kategori' => fake()->randomElement(['Protein', 'Sayuran', 'Bumbu', 'Karbohidrat', 'Minuman']),
+            'jumlah' => $jumlah,
+            'satuan' => $satuan,
+            'tanggal_masuk' => $tanggalMasuk,
+            'tanggal_kadaluarsa' => $tanggalKadaluarsa,
+            'status' => BahanBaku::determineStatus($jumlah, $tanggalKadaluarsa),
+            'created_at' => Carbon::instance(fake()->dateTimeBetween('-60 days', 'now')),
+        ];
     }
 }

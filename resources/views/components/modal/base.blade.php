@@ -29,9 +29,7 @@ $sizeClasses = [
                 @if($closable)
                     <button type="button" 
                             class="tutup-modal text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 transition ease-in-out duration-150">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                        <x-heroicon-o-x-mark class="h-6 w-6" />
                     </button>
                 @endif
             </div>
@@ -51,15 +49,28 @@ $sizeClasses = [
 document.addEventListener('DOMContentLoaded', function() {
     // Event delegation untuk menutup modal
     document.body.addEventListener('click', function(event) {
-        // Tutup modal ketika klik tombol close atau backdrop
+        // Tutup modal ketika klik tombol close
         if (event.target.classList.contains('tutup-modal') || 
-            event.target.closest('.tutup-modal') ||
-            event.target.classList.contains('modal-backdrop')) {
+            event.target.closest('.tutup-modal')) {
+            event.preventDefault();
+            event.stopPropagation();
             
-            const modal = event.target.closest('[id]');
+            const modal = event.target.closest('.modal-backdrop');
             if (modal && modal.id) {
                 closeModal(modal.id);
             }
+            return;
+        }
+        
+        // Tutup modal ketika klik backdrop (area luar modal content)
+        if (event.target.classList.contains('modal-backdrop')) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            if (event.target.id) {
+                closeModal(event.target.id);
+            }
+            return;
         }
     });
 
@@ -92,6 +103,7 @@ window.openModal = function(modalId) {
 
 // Global function untuk menutup modal
 window.closeModal = function(modalId) {
+    console.log('Closing modal:', modalId);
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.classList.add('hidden');
@@ -112,6 +124,10 @@ window.closeModal = function(modalId) {
                 el.classList.remove('border-red-500', 'border-green-500');
             });
         }
+        
+        console.log('Modal closed successfully:', modalId);
+    } else {
+        console.log('Modal not found:', modalId);
     }
 };
 </script>
