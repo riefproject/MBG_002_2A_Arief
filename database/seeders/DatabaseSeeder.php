@@ -28,8 +28,6 @@ class DatabaseSeeder extends Seeder
             'role' => 'dapur',
         ]);
 
-        User::factory(8)->create();
-
         $this->call([
             UserSeeder::class,
             BahanBakuSeeder::class,
