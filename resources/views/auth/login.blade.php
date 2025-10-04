@@ -25,7 +25,7 @@
                 <div>
                     <label for="email" class="block font-medium text-sm text-gray-700">Email</label>
                     <input id="email" 
-                           class="input-wajib-validasi border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm mt-1 block w-full" 
+                           class="input-wajib-validasi p-2 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm mt-1 block w-full" 
                            type="email" 
                            name="email" 
                            value="{{ old('email') }}" 
@@ -41,7 +41,7 @@
                 <div class="mt-4">
                     <label for="password" class="block font-medium text-sm text-gray-700">Password</label>
                     <input id="password" 
-                           class="input-wajib-validasi border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm mt-1 block w-full"
+                           class="input-wajib-validasi p-2 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm mt-1 block w-full"
                            type="password"
                            name="password"
                            required 

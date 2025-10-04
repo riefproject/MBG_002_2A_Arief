@@ -1,7 +1,7 @@
 import './bootstrap';
 import './ajax-forms';
 import './navbar-simple';
-import './in-page-spa';
+import './user-permintaan-index';
 import Alpine from 'alpinejs';
 
 // Inisialisasi Alpine.js

@@ -3,14 +3,19 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
 {
-    /**
-     * Update the user's profile information.
-     */
+    // tampilkan halaman profile
+    public function show(Request $request)
+    {
+        return view('profile');
+    }
+
+    // update data profile user
     public function update(Request $request)
     {
         $user = $request->user();
@@ -26,6 +31,8 @@ class ProfileController extends Controller
         ]);
 
         $user->update($validated);
+        $user->refresh();
+        Auth::setUser($user);
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
@@ -34,6 +41,9 @@ class ProfileController extends Controller
                 'data' => [
                     'name' => $user->name,
                     'email' => $user->email,
+                    'initial' => mb_strtoupper(mb_substr($user->name, 0, 1)),
+                    'updated_at_diff' => optional($user->updated_at)->diffForHumans() ?? '-',
+                    'updated_at' => optional($user->updated_at)->toIso8601String(),
                 ]
             ]);
         }
@@ -43,9 +53,7 @@ class ProfileController extends Controller
             ->with('success', 'Profile berhasil diupdate.');
     }
 
-    /**
-     * Update pw
-     */
+    // ganti password user
     public function updatePassword(Request $request)
     {
         $validated = $request->validate([
@@ -74,10 +82,12 @@ class ProfileController extends Controller
                 ->withErrors(['current_password' => 'Password saat ini tidak benar.']);
         }
 
-        // Update password
+        // update password di database
         $user->update([
             'password' => Hash::make($validated['password']),
         ]);
+        $user->refresh();
+        Auth::setUser($user);
 
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([

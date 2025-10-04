@@ -4,28 +4,38 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\BahanBaku;
+use App\Support\Database\SyncsPostgresSequences;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class BahanBakuController extends Controller
 {
-    /**
-     * Display the specified bahan baku.
-     */
+    use SyncsPostgresSequences;
+
+    // tampilin detail bahan baku per item
     public function show(BahanBaku $bahanBaku)
     {
-        return view('admin.bahan_baku.detail', compact('bahanBaku'));
+        $resource = $this->formatBahanBakuResource($bahanBaku);
+
+        return view('admin.bahan_baku.detail', [
+            'bahanBaku' => $bahanBaku,
+            'bahanBakuData' => $resource,
+        ]);
     }
-    /**
-     * Display a listing of bahan baku.
-     */
+    // tampilkan daftar bahan baku buat dashboard gudang
     public function index(Request $request)
     {
-        return spa_view('admin.bahan_baku.index', 'admin.bahan_baku.partial');
+        $bahanBakus = BahanBaku::latest()
+            ->get()
+            ->map(fn (BahanBaku $bb) => $this->formatBahanBakuResource($bb))
+            ->values();
+
+        return view('admin.bahan_baku.index', [
+            'bahanBakus' => $bahanBakus,
+        ]);
     }
 
-    /**
-     * Store a newly created bahan baku.
-     */
+    // simpen bahan baku baru dari form
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -46,6 +56,8 @@ class BahanBakuController extends Controller
 
         $status = BahanBaku::determineStatus($validated['jumlah'], $validated['tanggal_kadaluarsa']);
 
+        $this->syncPostgresSequence('bahan_baku');
+
         $bb = BahanBaku::create([
             'nama' => $validated['nama'],
             'kategori' => $validated['kategori'],
@@ -56,6 +68,9 @@ class BahanBakuController extends Controller
             'status' => $status,
             'created_at' => now(),
         ]);
+        
+        // refresh status biar tetap konsisten
+        $bb->refreshStatus(true);
 
         
         if ($request->wantsJson() || $request->ajax()) {
@@ -70,11 +85,29 @@ class BahanBakuController extends Controller
             ->with('success', 'Bahan baku berhasil ditambahkan.');
     }
 
-    /**
-     * Update the specified bahan baku.
-     */
-    public function update(Request $request, BahanBaku $bb)
+    // update stok bahan baku yg udah ada
+    public function update(Request $request, BahanBaku $bahanBaku)
     {
+        $currentStatus = BahanBaku::determineStatus($bahanBaku->jumlah, $bahanBaku->tanggal_kadaluarsa);
+
+        if ($currentStatus === 'kadaluarsa') {
+            $message = 'Bahan baku kadaluarsa hanya bisa dihapus.';
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                    'errors' => [
+                        'jumlah' => [$message],
+                    ],
+                ], 422);
+            }
+
+            return redirect()
+                ->route('admin.bahan_baku.index')
+                ->with('error', $message);
+        }
+
         $validated = $request->validate([
             'jumlah' => 'required|integer|min:0',
         ], [
@@ -83,20 +116,21 @@ class BahanBakuController extends Controller
             'jumlah.min' => 'jumlah tidak boleh kurang dari 0',
         ]);
 
-        $status = BahanBaku::determineStatus($validated['jumlah'], $bb->tanggal_kadaluarsa);
+        $newStatus = BahanBaku::determineStatus($validated['jumlah'], $bahanBaku->tanggal_kadaluarsa);
 
-        $bb->update([
+        $bahanBaku->update([
             'jumlah' => $validated['jumlah'],
-            'status' => $status,
+            'status' => $newStatus,
         ]);
-        $bb->refresh();
+        
+        $bahanBaku->refresh();
 
         
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Stok bahan baku berhasil diperbarui.',
-                'data' => $this->formatBahanBakuResource($bb),
+                'data' => $this->formatBahanBakuResource($bahanBaku),
             ]);
         }
 
@@ -105,14 +139,12 @@ class BahanBakuController extends Controller
             ->with('success', 'Stok bahan baku berhasil diperbarui.');
     }
 
-    /**
-     * Remove the specified bahan baku.
-     */
-    public function destroy(Request $request, BahanBaku $bb)
+    // hapus bahan baku kalo udah kadaluarsa
+    public function destroy(Request $request, BahanBaku $bahanBaku)
     {
-        $currentStatus = $bb->refreshStatus();
+        $status = BahanBaku::determineStatus($bahanBaku->jumlah, $bahanBaku->tanggal_kadaluarsa);
 
-        if ($currentStatus !== 'kadaluarsa') {
+        if ($status !== 'kadaluarsa') {
             $message = 'Bahan baku hanya dapat dihapus jika statusnya kadaluarsa.';
 
             if ($request->wantsJson() || $request->ajax()) {
@@ -127,9 +159,9 @@ class BahanBakuController extends Controller
                 ->with('error', $message);
         }
 
-        $bbName = $bb->nama;
-        $bbId = $bb->id;
-        $bb->delete();
+        $bbName = $bahanBaku->nama;
+        $bbId = $bahanBaku->id;
+        $bahanBaku->delete();
 
         
         if ($request->wantsJson() || $request->ajax()) {
@@ -148,11 +180,15 @@ class BahanBakuController extends Controller
             ->with('success', 'Bahan baku berhasil dihapus.');
     }
 
-    /**
-     * Format response data untuk bahan baku.
-     */
+    // format data bahan baku biar konsisten
     protected function formatBahanBakuResource(BahanBaku $bb): array
     {
+        $status = BahanBaku::determineStatus($bb->jumlah, $bb->tanggal_kadaluarsa);
+
+        $statusLabel = Str::headline($status);
+
+        $routeParams = ['bahan_baku' => $bb->getKey()];
+
         return [
             'id' => $bb->id,
             'nama' => $bb->nama,
@@ -161,15 +197,17 @@ class BahanBakuController extends Controller
             'satuan' => $bb->satuan,
             'jumlah_label' => trim($bb->jumlah . ' ' . $bb->satuan),
             'tanggal_masuk' => optional($bb->tanggal_masuk)->format('d M Y'),
+            'tanggal_masuk_label' => optional($bb->tanggal_masuk)->format('d M Y'),
             'tanggal_masuk_iso' => optional($bb->tanggal_masuk)->format('Y-m-d'),
             'tanggal_kadaluarsa' => optional($bb->tanggal_kadaluarsa)->format('d M Y'),
+            'tanggal_kadaluarsa_label' => optional($bb->tanggal_kadaluarsa)->format('d M Y'),
             'tanggal_kadaluarsa_iso' => optional($bb->tanggal_kadaluarsa)->format('Y-m-d'),
-            'status' => $bb->status,
-            'status_label' => str_replace('_', ' ', $bb->status),
-            'can_delete' => $bb->status === 'kadaluarsa',
-            'view_url' => route('admin.bahan_baku.show', $bb),
-            'edit_url' => route('admin.bahan_baku.update', $bb),
-            'delete_url' => route('admin.bahan_baku.destroy', $bb),
+            'status' => $status,
+            'status_label' => $statusLabel,
+            'can_delete' => $status === 'kadaluarsa',
+            'view_url' => route('admin.bahan_baku.show', $routeParams),
+            'edit_url' => route('admin.bahan_baku.update', $routeParams),
+            'delete_url' => route('admin.bahan_baku.destroy', $routeParams),
         ];
     }
 }

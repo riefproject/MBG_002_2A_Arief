@@ -31,7 +31,6 @@
             <div class="flex items-center justify-between mt-6 pt-6 border-t border-gray-200">
                 @if($cancelUrl)
                     <a href="{{ $cancelUrl }}" 
-                       data-spa
                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150">
                         Batal
                     </a>
@@ -49,7 +48,7 @@
 @if($useValidation)
 @push('scripts')
 <script>
-// Auto validasi untuk form dengan class 'form-dengan-validasi'
+// auto validasi simple buat form 'form-dengan-validasi'
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('{{ $id }}');
     if (form && form.classList.contains('form-dengan-validasi')) {
@@ -60,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let isValid = true;
             let errorMessage = '';
             
-            // Validasi berdasarkan type input
+            // cek validasi sesuai tipe input
             if (input.hasAttribute('required') && input.value.trim() === '') {
                 isValid = false;
                 errorMessage = 'Field ini tidak boleh kosong.';
@@ -72,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 errorMessage = 'Password minimal 6 karakter.';
             }
             
-            // Update tampilan
+            // update tampilan sesuai hasil
             if (isValid) {
                 input.classList.remove('border-red-500', 'border-red-300');
                 input.classList.add('border-green-500');
@@ -89,19 +88,19 @@ document.addEventListener('DOMContentLoaded', function() {
             return isValid;
         };
         
-        // Helper function untuk validasi email
+        // helper cek format email
         const isValidEmail = (email) => {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return emailRegex.test(email);
         };
         
-        // Real-time validation saat user mengetik
+        // validasi realtime pas user ngetik
         inputs.forEach(input => {
             input.addEventListener('input', () => validateInput(input));
             input.addEventListener('blur', () => validateInput(input));
         });
         
-        // Validasi saat submit
+        // validasi ulang pas submit
         form.addEventListener('submit', (event) => {
             let isFormValid = true;
             
@@ -114,14 +113,14 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!isFormValid) {
                 event.preventDefault();
                 
-                // Focus ke input pertama yang error
+                // fokus ke input pertama yg error
                 const firstErrorInput = form.querySelector('.border-red-500');
                 if (firstErrorInput) {
                     firstErrorInput.focus();
                     firstErrorInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
                 
-                // Show notification
+                // munculin notif biar user tau
                 if (window.showNotification) {
                     window.showNotification('Harap perbaiki semua error sebelum submit.', 'error');
                 }

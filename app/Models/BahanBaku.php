@@ -30,34 +30,53 @@ class BahanBaku extends Model
     ];
 
     /**
-     * Tentukan status bahan baku berdasarkan jumlah stok dan tanggal kadaluarsa.
+     * Boot the model - auto refresh status on key events
      */
-    public static function determineStatus(int $jumlah, $tanggalKadaluarsa = null): string
+    protected static function boot()
     {
+        parent::boot();
+        
+        // Auto-refresh status sebelum menyimpan data
+        static::saving(function ($bahanBaku) {
+            $bahanBaku->status = static::determineStatus($bahanBaku->jumlah, $bahanBaku->tanggal_kadaluarsa);
+        });
+        
+        // Auto-refresh status setelah model di-update
+        static::updated(function ($bahanBaku) {
+            $newStatus = static::determineStatus($bahanBaku->jumlah, $bahanBaku->tanggal_kadaluarsa);
+            if ($bahanBaku->status !== $newStatus) {
+                // Update tanpa trigger events lagi untuk menghindari infinite loop
+                static::withoutEvents(function () use ($bahanBaku, $newStatus) {
+                    $bahanBaku->update(['status' => $newStatus]);
+                });
+            }
+        });
+    }
+
+    /**
+     * Tentukan status bahan baku berdasarkan jumlah stok dan tanggal kadaluarsa.
+     * Prioritas: kadaluarsa > habis > segera_kadaluarsa > tersedia
+     */
+    public static function determineStatus(?int $jumlah, $tanggalKadaluarsa = null): string
+    {
+        $jumlah = (int) ($jumlah ?? 0);
         $today = now()->startOfDay();
-        $tanggalKadaluarsa = $tanggalKadaluarsa
+        $expiryDate = $tanggalKadaluarsa
             ? Carbon::parse($tanggalKadaluarsa)->startOfDay()
             : null;
 
-        $kadaluarsa = $tanggalKadaluarsa && $today->gte($tanggalKadaluarsa);
-        $habis = $jumlah === 0;
-        $segeraKadaluarsa = $tanggalKadaluarsa && !$kadaluarsa && $today->diffInDays($tanggalKadaluarsa, false) <= 3 && $jumlah > 0;
-        $tersedia = $jumlah > 0 && !$kadaluarsa;
+        $diff = $expiryDate ? $today->diffInDays($expiryDate, false) : null;
 
-        if ($habis) {
-            return 'habis';
-        }
-
-        if ($kadaluarsa) {
+        if (isset($diff) && $diff < 0) {
             return 'kadaluarsa';
         }
 
-        if ($segeraKadaluarsa) {
-            return 'segera_kadaluarsa';
+        if ($jumlah <= 0) {
+            return 'habis';
         }
 
-        if ($tersedia) {
-            return 'tersedia';
+        if (isset($diff) && $diff <= 3) {
+            return 'segera_kadaluarsa';
         }
 
         return 'tersedia';
@@ -70,7 +89,7 @@ class BahanBaku extends Model
     {
         $status = static::determineStatus($this->jumlah, $this->tanggal_kadaluarsa);
 
-        if ($save && $this->status !== $status) {
+        if ($save && $this->exists && $this->status !== $status) {
             $this->status = $status;
             $this->save();
         } else {

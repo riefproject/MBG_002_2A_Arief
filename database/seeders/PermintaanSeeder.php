@@ -113,6 +113,14 @@ class PermintaanSeeder extends Seeder
             ['pemohon_id', 'tgl_masak', 'menu_makan', 'jumlah_porsi', 'status', 'created_at']
         );
 
+        $permintaanMaxId = DB::table('permintaan')->max('id');
+        if ($permintaanMaxId !== null) {
+            DB::statement(
+                "SELECT setval(pg_get_serial_sequence('permintaan','id'), ?, true)",
+                [$permintaanMaxId]
+            );
+        }
+
         $detail = [
             ['id' => 1, 'permintaan_id' => 1, 'bahan_id' => 1, 'jumlah_diminta' => 50],
             ['id' => 2, 'permintaan_id' => 1, 'bahan_id' => 3, 'jumlah_diminta' => 40],
@@ -150,5 +158,13 @@ class PermintaanSeeder extends Seeder
             ['id'],
             ['permintaan_id', 'bahan_id', 'jumlah_diminta']
         );
+
+        $detailMaxId = DB::table('permintaan_detail')->max('id');
+        if ($detailMaxId !== null) {
+            DB::statement(
+                "SELECT setval(pg_get_serial_sequence('permintaan_detail','id'), ?, true)",
+                [$detailMaxId]
+            );
+        }
     }
 }

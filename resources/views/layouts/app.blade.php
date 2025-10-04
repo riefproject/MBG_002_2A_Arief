@@ -15,6 +15,16 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="font-sans antialiased bg-gray-50 min-h-screen">
+    @php
+        $desktopNavBase = 'nav-link inline-flex items-center px-4 py-2 text-sm font-medium transition-all duration-200 rounded-md border-b-2 border-transparent hover:border-blue-500';
+        $desktopNavIdle = 'text-gray-600 hover:text-gray-900 hover:bg-gray-50';
+        $desktopNavActive = 'text-blue-600 border-blue-500 bg-blue-50';
+        $mobileNavBase = 'mobile-nav-link flex items-center pl-3 pr-4 py-3 text-base font-medium transition-colors duration-200';
+        $mobileNavIdle = 'text-gray-600 hover:text-gray-900 hover:bg-gray-50';
+        $mobileNavActive = 'text-blue-600 bg-blue-50 border-r-4 border-blue-600';
+        $isGudang = auth()->check() && auth()->user()->role === 'gudang';
+        $isDapur = auth()->check() && auth()->user()->role === 'dapur';
+    @endphp
     <!-- Navigation Header -->
     <nav class="bg-white shadow-sm border-b border-gray-200" x-data="{ mobileMenuOpen: false }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -30,32 +40,45 @@
                     <!-- Desktop Navigation -->
                     <div class="hidden sm:ml-6 sm:flex sm:space-x-1">
                         @auth
-                                     <a href="{{ route('dashboard') }}"
-                                         class="nav-link inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200 rounded-md border-b-2 border-transparent hover:border-blue-500 {{ request()->routeIs('dashboard') || request()->routeIs('admin.*') ? 'text-blue-600 border-blue-500 bg-blue-50' : '' }}">
+                            <a href="{{ route('dashboard') }}"
+                                    class="{{ $desktopNavBase }} {{ !empty($navActive['dashboard'] ?? null) ? $desktopNavActive : $desktopNavIdle }}">
                                 <x-heroicon-o-home class="w-4 h-4 mr-2" />
                                 Dashboard
                             </a>
                         @endauth
                     </div>
-                    @hasRole('gudang')
-                        <div class="hidden sm:ml-6 sm:flex sm:space-x-1">
-                            @auth
-                                        <a href="{{ route('admin.bahan_baku') }}"
-                                            class="nav-link inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200 rounded-md border-b-2 border-transparent hover:border-blue-500 {{ request()->routeIs('dashboard') || request()->routeIs('admin.*') ? 'text-blue-600 border-blue-500 bg-blue-50' : '' }}">
-                                    <x-heroicon-o-home class="w-4 h-4 mr-2" />
-                                    Management Bahan Baku
-                                </a>
-                            @endauth
+                    @if($isDapur)
+                        <div class="hidden sm:ml-4 sm:flex sm:space-x-1">
+                            <a href="{{ route('user.permintaan.index') }}"
+                                class="{{ $desktopNavBase }} {{ !empty($navActive['user_permintaan'] ?? null) ? $desktopNavActive : $desktopNavIdle }}">
+                                <x-heroicon-o-inbox-arrow-down class="w-4 h-4 mr-2" />
+                                Permintaan Bahan
+                            </a>
                         </div>
-                    @endhasRole
+                    @endif
+                    @if($isGudang)
+                        <div class="hidden sm:ml-6 sm:flex sm:space-x-1">
+                            <a href="{{ route('admin.bahan_baku') }}"
+                                class="{{ $desktopNavBase }} {{ !empty($navActive['admin_bahan_baku'] ?? null) ? $desktopNavActive : $desktopNavIdle }}">
+                                <x-heroicon-o-cube class="w-4 h-4 mr-2" />
+                                Management Bahan Baku
+                            </a>
+
+                            <a href="{{ route('admin.permintaan.index') }}"
+                                class="{{ $desktopNavBase }} {{ !empty($navActive['admin_permintaan'] ?? null) ? $desktopNavActive : $desktopNavIdle }}">
+                                <x-heroicon-o-inbox-arrow-down class="w-4 h-4 mr-2" />
+                                Proses Permintaan
+                            </a>
+                        </div>
+                    @endif
                 </div>
 
                 <!-- User Menu & Mobile Menu Button -->
                 <div class="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
                     @auth
                         <!-- Profile Link -->
-                        <a href="{{ route('profile') }}"
-                           class="nav-link inline-flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200 rounded-md border-b-2 border-transparent hover:border-blue-500 {{ request()->routeIs('profile') ? 'text-blue-600 border-blue-500 bg-blue-50' : '' }}">
+                                <a href="{{ route('profile') }}"
+                                    class="{{ $desktopNavBase }} {{ !empty($navActive['profile'] ?? null) ? $desktopNavActive : $desktopNavIdle }}">
                             <x-heroicon-o-user class="w-4 h-4 mr-2" />
                             Profile
                         </a>
@@ -81,7 +104,8 @@
                                  x-transition:leave-start="transform opacity-100 scale-100"
                                  x-transition:leave-end="transform opacity-0 scale-95"
                                  class="origin-top-right absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 border border-gray-100">
-                                <div class="py-1">
+                                
+                                 <div class="py-1">
                                     <div class="px-4 py-3 text-sm text-gray-700 border-b border-gray-100 bg-gray-50">
                                         <div class="font-medium text-gray-900">{{ Auth::user()->name }}</div>
                                         <div class="text-xs text-gray-500 mt-1">{{ Auth::user()->email }}</div>
@@ -132,16 +156,31 @@
             <div class="pt-2 pb-3 space-y-1 bg-white border-t border-gray-200">
                 @auth
                           <a href="{{ route('dashboard') }}"
-                              class="mobile-nav-link flex items-center pl-3 pr-4 py-3 text-base font-medium transition-colors duration-200 {{ request()->routeIs('dashboard') || request()->routeIs('admin.*') ? 'text-blue-600 bg-blue-50 border-r-4 border-blue-600' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
+                              class="{{ $mobileNavBase }} {{ !empty($navActive['dashboard'] ?? null) ? $mobileNavActive : $mobileNavIdle }}">
                         <x-heroicon-o-home class="w-5 h-5 mr-3" />
                         Dashboard
                     </a>
                     
                     <a href="{{ route('profile') }}"
-                       class="mobile-nav-link flex items-center pl-3 pr-4 py-3 text-base font-medium transition-colors duration-200 {{ request()->routeIs('profile') ? 'text-blue-600 bg-blue-50 border-r-4 border-blue-600' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
+                       class="{{ $mobileNavBase }} {{ !empty($navActive['profile'] ?? null) ? $mobileNavActive : $mobileNavIdle }}">
                         <x-heroicon-o-user class="w-5 h-5 mr-3" />
                         Profile
                     </a>
+
+                    @if($isGudang)
+                        <a href="{{ route('admin.permintaan.index') }}"
+                           class="{{ $mobileNavBase }} {{ !empty($navActive['admin_permintaan'] ?? null) ? $mobileNavActive : $mobileNavIdle }}">
+                            <x-heroicon-o-inbox-arrow-down class="w-5 h-5 mr-3" />
+                            Proses Permintaan
+                        </a>
+                    @endif
+                    @if($isDapur)
+                        <a href="{{ route('user.permintaan.index') }}"
+                           class="{{ $mobileNavBase }} {{ !empty($navActive['user_permintaan'] ?? null) ? $mobileNavActive : $mobileNavIdle }}">
+                            <x-heroicon-o-inbox-arrow-down class="w-5 h-5 mr-3" />
+                            Permintaan Bahan
+                        </a>
+                    @endif
                 @endauth
             </div>
             
@@ -150,14 +189,14 @@
                     <div class="flex items-center px-4">
                         <div class="flex-shrink-0">
                             <div class="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-md">
-                                <span class="text-sm font-medium text-white">
+                                <span class="text-sm font-medium text-white" id="mobile-avatar-initial">
                                     {{ substr(Auth::user()->name, 0, 1) }}
                                 </span>
                             </div>
                         </div>
                         <div class="ml-3">
-                            <div class="text-base font-medium text-gray-900">{{ Auth::user()->name }}</div>
-                            <div class="text-sm font-medium text-gray-600">{{ Auth::user()->email }}</div>
+                            <div class="text-base font-medium text-gray-900" id="mobile-user-name">{{ Auth::user()->name }}</div>
+                            <div class="text-sm font-medium text-gray-600" id="mobile-user-email">{{ Auth::user()->email }}</div>
                             <div class="text-xs text-blue-600 mt-1 capitalize">{{ Auth::user()->role }}</div>
                         </div>
                     </div>

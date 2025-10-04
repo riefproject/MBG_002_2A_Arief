@@ -32,6 +32,7 @@ class PermintaanFactory extends Factory
                 Permintaan::STATUS_MENUNGGU,
                 Permintaan::STATUS_DISETUJUI,
                 Permintaan::STATUS_DITOLAK,
+                Permintaan::STATUS_KADALUARSA,
             ]),
             'created_at' => Carbon::instance(fake()->dateTimeBetween('-7 days', 'now')),
         ];
@@ -64,6 +65,16 @@ class PermintaanFactory extends Factory
     {
         return $this->state([
             'status' => Permintaan::STATUS_DITOLAK,
+        ]);
+    }
+
+    /**
+     * Status kadaluarsa.
+     */
+    public function kadaluarsa(): static
+    {
+        return $this->state([
+            'status' => Permintaan::STATUS_KADALUARSA,
         ]);
     }
 }

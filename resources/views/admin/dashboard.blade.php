@@ -1,113 +1,122 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="py-12" data-spa-content>
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-            <div class="p-6 text-gray-900">
-                <div class="mb-6">
-                    <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-                    <p class="text-gray-600">Selamat datang, {{ Auth::user()->name }}!</p>
+<div class="py-10">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <header class="flex flex-col gap-2">
+            <h1 class="text-2xl font-semibold text-gray-900">Halo, {{ $userName ?? 'Tim Gudang' }} 👋</h1>
+            <p class="text-sm text-gray-500">Ringkasan singkat permintaan dapur dan stok yang perlu perhatian.</p>
+        </header>
+
+        <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            @forelse($statCards ?? [] as $card)
+                <article class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+                    <p class="text-sm font-medium text-gray-500">{{ $card['label'] }}</p>
+                    <div class="mt-3 flex items-center justify-between">
+                        <span class="text-3xl font-semibold text-gray-900">{{ number_format((int) ($card['value'] ?? 0)) }}</span>
+                        <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl border text-sm font-semibold {{ $card['accent'] ?? 'bg-gray-50 text-gray-600 border-gray-100' }}">
+                            @if(!empty($card['icon']))
+                                <x-dynamic-component :component="$card['icon']" class="h-5 w-5" />
+                            @endif
+                        </span>
+                    </div>
+                    @if(!empty($card['description']))
+                        <p class="mt-3 text-xs text-gray-500">{{ $card['description'] }}</p>
+                    @endif
+                </article>
+            @empty
+                <p class="text-sm text-gray-500">Belum ada data permintaan yang dapat ditampilkan.</p>
+            @endforelse
+        </section>
+
+        <section class="grid gap-6 lg:grid-cols-2">
+            <article class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900">Antrian permintaan</h2>
+                        <p class="text-sm text-gray-500">{{ ($menungguCount ?? 0) > 0 ? 'Prioritaskan permintaan yang sudah menunggu lama.' : 'Tidak ada permintaan menunggu saat ini.' }}</p>
+                    </div>
+                    <a href="{{ route('admin.permintaan.index') }}" class="text-sm font-medium text-blue-600 hover:text-blue-700">Kelola</a>
                 </div>
+                <ul class="mt-4 space-y-3 text-sm text-gray-600">
+                    @forelse($pendingHighlights ?? [] as $item)
+                        <li class="rounded-xl border border-gray-100 px-3 py-2">
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="font-medium text-gray-900">{{ $item['menu'] }}</span>
+                                <span class="text-xs text-gray-500">{{ $item['created_diff'] }}</span>
+                            </div>
+                            <div class="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                                <span>Pemohon: <strong>{{ $item['pemohon'] }}</strong></span>
+                                <span>Masak: {{ $item['tgl_masak_label'] }}</span>
+                            </div>
+                        </li>
+                    @empty
+                        <li class="rounded-xl border border-dashed border-gray-200 px-3 py-6 text-center text-sm text-gray-500">Belum ada permintaan menunggu.</li>
+                    @endforelse
+                </ul>
+            </article>
 
-                <!-- Stats Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    @hasRole('gudang')
-                    <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
-                        <div class="flex items-center">
-                            <div class="p-3 bg-blue-500 rounded-full">
-                                <x-heroicon-o-users class="h-6 w-6 text-white" />
-                            </div>
-                            <div class="ml-4">
-                                <h2 class="text-lg font-semibold text-gray-900">Users</h2>
-                                <p class="text-2xl font-bold text-blue-600">{{ App\Models\User::count() }}</p>
-                            </div>
-                        </div>
+            <article class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900">Stok prioritas</h2>
+                        <p class="text-sm text-gray-500">Fokuskan restock atau distribusi ke bahan berikut.</p>
                     </div>
-                    @endhasRole
-
-                    <div class="bg-green-50 p-6 rounded-lg border border-green-200">
-                        <div class="flex items-center">
-                            <div class="p-3 bg-green-500 rounded-full">
-                                <x-heroicon-o-check-circle class="h-6 w-6 text-white" />
-                            </div>
-                            <div class="ml-4">
-                                <h2 class="text-lg font-semibold text-gray-900">Status</h2>
-                                <p class="text-2xl font-bold text-green-600">Aktif</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-purple-50 p-6 rounded-lg border border-purple-200">
-                        <div class="flex items-center">
-                            <div class="p-3 bg-purple-500 rounded-full">
-                                <x-heroicon-o-identification class="h-6 w-6 text-white" />
-                            </div>
-                            <div class="ml-4">
-                                <h2 class="text-lg font-semibold text-gray-900">Role</h2>
-                                <p class="text-2xl font-bold text-purple-600 capitalize">{{ Auth::user()->role }}</p>
-                            </div>
-                        </div>
-                    </div>
+                    <a href="{{ route('admin.bahan_baku.index') }}" class="text-sm font-medium text-blue-600 hover:text-blue-700">Kelola</a>
                 </div>
-
-                <!-- Quick Actions -->
-                <div class="bg-gray-50 p-6 rounded-lg">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <a href="{{ route('admin.bahan_baku.index') }}" data-spa 
-                           class="flex items-center p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
-                            <x-heroicon-o-cube class="h-8 w-8 text-blue-500 mr-3" />
-                            <div>
-                                <h4 class="font-medium text-gray-900">Manajemen Bahan Baku</h4>
-                                <p class="text-sm text-gray-500">Kelola bahan baku</p>
+                <ul class="mt-4 space-y-3 text-sm text-gray-600">
+                    @forelse($priorityStocks ?? [] as $stock)
+                        <li class="rounded-xl border border-gray-100 px-3 py-2">
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="font-medium text-gray-900">{{ $stock['nama'] }}</span>
+                                <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold {{ $stock['status_badge_class'] }}">{{ $stock['status_badge_label'] }}</span>
                             </div>
-                        </a>
-
-                        <a href="{{ route('profile') }}" data-spa 
-                           class="flex items-center p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
-                            <x-heroicon-o-user class="h-8 w-8 text-green-500 mr-3" />
-                            <div>
-                                <h4 class="font-medium text-gray-900">Profile</h4>
-                                <p class="text-sm text-gray-500">Update informasi profil</p>
+                            <div class="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                                <span>Sisa stok: <strong class="text-gray-700">{{ $stock['jumlah_label'] }}</strong></span>
+                                <span>Kadaluarsa: {{ $stock['tanggal_kadaluarsa_label'] }}</span>
                             </div>
-                        </a>
-                    </div>
+                        </li>
+                    @empty
+                        <li class="rounded-xl border border-dashed border-gray-200 px-3 py-6 text-center text-sm text-gray-500">Semua stok aman.</li>
+                    @endforelse
+                </ul>
+            </article>
+        </section>
+
+        <section class="rounded-2xl border border-blue-100 bg-blue-50/60 p-5">
+            <h2 class="text-base font-semibold text-blue-900">Catatan singkat</h2>
+            <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm text-blue-800">
+                <div class="rounded-xl bg-white/70 px-3 py-3">
+                    <p class="font-semibold text-blue-900">Permintaan minggu ini</p>
+                    <p class="mt-1 text-2xl font-bold text-blue-700">{{ number_format((int) ($permintaanMingguIni ?? 0)) }}</p>
                 </div>
-
-                <!-- Recent Activity -->
-                <div class="mt-8">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Activity Timeline</h3>
-                    <div class="bg-white border border-gray-200 rounded-lg">
-                        <div class="p-6">
-                            <div class="flow-root">
-                                <ul class="-mb-8">
-                                    <li>
-                                        <div class="relative pb-8">
-                                            <div class="relative flex space-x-3">
-                                                <div>
-                                                    <span class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center ring-8 ring-white">
-                                                        <x-heroicon-s-check class="h-5 w-5 text-white" />
-                                                    </span>
-                                                </div>
-                                                <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                                                    <div>
-                                                        <p class="text-sm text-gray-500">Login berhasil sebagai <span class="font-medium text-gray-900">{{ Auth::user()->role }}</span></p>
-                                                    </div>
-                                                    <div class="text-right text-sm whitespace-nowrap text-gray-500">
-                                                        <time>{{ now()->format('H:i') }}</time>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
+                <div class="rounded-xl bg-white/70 px-3 py-3">
+                    <p class="font-semibold text-blue-900">Total permintaan</p>
+                    <p class="mt-1 text-2xl font-bold text-blue-700">{{ number_format((int) ($totalPermintaan ?? 0)) }}</p>
+                </div>
+                <div class="rounded-xl bg-white/70 px-3 py-3">
+                    <p class="font-semibold text-blue-900">Aksi cepat</p>
+                    <ul class="mt-2 space-y-2 text-xs text-blue-800">
+                        <li class="flex items-center gap-2">
+                            <x-heroicon-o-inbox-arrow-down class="h-4 w-4" />
+                            <a href="{{ route('admin.permintaan.index') }}" class="underline">Proses permintaan</a>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <x-heroicon-o-cube class="h-4 w-4" />
+                            <a href="{{ route('admin.bahan_baku.index') }}" class="underline">Kelola stok</a>
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <x-heroicon-o-user class="h-4 w-4" />
+                            <a href="{{ route('profile') }}" class="underline">Perbarui profil</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="rounded-xl bg-white/70 px-3 py-3">
+                    <p class="font-semibold text-blue-900">Catatan</p>
+                    <p class="mt-1 text-xs">Pastikan permintaan menunggu diselesaikan sebelum pergantian shift.</p>
                 </div>
             </div>
-        </div>
+        </section>
     </div>
 </div>
 @endsection

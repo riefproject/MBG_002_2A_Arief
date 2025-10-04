@@ -17,21 +17,37 @@ class PermintaanDetail extends Model
         'permintaan_id',
         'bahan_id',
         'jumlah_diminta',
+        'bahan_nama_snapshot',
+        'bahan_satuan_snapshot',
     ];
 
     protected $casts = [
         'jumlah_diminta' => 'integer',
+        'bahan_nama_snapshot' => 'string',
+        'bahan_satuan_snapshot' => 'string',
     ];
 
-    // Relasi ke permintaan induk.
+    // relasi ke permintaan induk
     public function permintaan(): BelongsTo
     {
         return $this->belongsTo(Permintaan::class, 'permintaan_id');
     }
 
-    // Relasi ke bahan baku yang diminta.
+    // relasi ke bahan baku yg diminta
     public function bahan(): BelongsTo
     {
         return $this->belongsTo(BahanBaku::class, 'bahan_id');
+    }
+
+    // ambil nama bahan fallback snapshot
+    public function getBahanNamaLabelAttribute(): ?string
+    {
+        return optional($this->bahan)->nama ?? $this->bahan_nama_snapshot;
+    }
+
+    // ambil satuan bahan fallback snapshot
+    public function getBahanSatuanLabelAttribute(): ?string
+    {
+        return optional($this->bahan)->satuan ?? $this->bahan_satuan_snapshot;
     }
 }

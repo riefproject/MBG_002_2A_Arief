@@ -45,11 +45,29 @@ $sizeClasses = [
 @once
 @push('scripts')
 <script>
-// Universal modal controller dengan event delegation
+// kontrol modal global pake event delegation
 document.addEventListener('DOMContentLoaded', function() {
-    // Event delegation untuk menutup modal
+    // handle klik buka / tutup modal
     document.body.addEventListener('click', function(event) {
-        // Tutup modal ketika klik tombol close
+        const openTrigger = event.target.closest('[data-action="open-modal"]');
+        if (openTrigger) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const target = openTrigger.dataset.target ||
+                           openTrigger.getAttribute('data-modal') ||
+                           openTrigger.getAttribute('data-modal-id');
+
+            if (target) {
+                const modalId = target.startsWith('#') ? target.slice(1) : target;
+                if (typeof window.openModal === 'function') {
+                    window.openModal(modalId);
+                }
+            }
+            return;
+        }
+
+        // nutup modal pas klik tombol close
         if (event.target.classList.contains('tutup-modal') || 
             event.target.closest('.tutup-modal')) {
             event.preventDefault();
@@ -62,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Tutup modal ketika klik backdrop (area luar modal content)
+        // nutup modal kalo klik area backdrop
         if (event.target.classList.contains('modal-backdrop')) {
             event.preventDefault();
             event.stopPropagation();
@@ -74,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Tutup modal dengan ESC key
+    // tutup modal lewat tombol esc
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') {
             const openModal = document.querySelector('.modal-backdrop:not(.hidden)');
@@ -85,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Global function untuk membuka modal
+// fungsi global buka modal
 window.openModal = function(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
@@ -93,7 +111,7 @@ window.openModal = function(modalId) {
         modal.classList.add('flex');
         document.body.style.overflow = 'hidden';
         
-        // Focus ke input pertama jika ada
+        // fokus ke input pertama kalo ada
         const firstInput = modal.querySelector('input:not([type="hidden"]), textarea, select');
         if (firstInput) {
             setTimeout(() => firstInput.focus(), 100);
@@ -101,33 +119,28 @@ window.openModal = function(modalId) {
     }
 };
 
-// Global function untuk menutup modal
+// fungsi global nutup modal
 window.closeModal = function(modalId) {
-    console.log('Closing modal:', modalId);
     const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        document.body.style.overflow = 'auto';
-        
-        // Reset form jika ada
-        const form = modal.querySelector('form');
-        if (form) {
-            form.reset();
-            
-            // Clear validation errors
-            const errorElements = form.querySelectorAll('.pesan-error');
-            errorElements.forEach(el => el.textContent = '');
-            
-            const inputElements = form.querySelectorAll('input, textarea, select');
-            inputElements.forEach(el => {
-                el.classList.remove('border-red-500', 'border-green-500');
-            });
-        }
-        
-        console.log('Modal closed successfully:', modalId);
-    } else {
-        console.log('Modal not found:', modalId);
+    if (!modal) {
+        return;
+    }
+
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = 'auto';
+
+    const form = modal.querySelector('form');
+    if (form) {
+        form.reset();
+
+        const errorElements = form.querySelectorAll('.pesan-error');
+        errorElements.forEach(el => el.textContent = '');
+
+        const inputElements = form.querySelectorAll('input, textarea, select');
+        inputElements.forEach(el => {
+            el.classList.remove('border-red-500', 'border-green-500');
+        });
     }
 };
 </script>

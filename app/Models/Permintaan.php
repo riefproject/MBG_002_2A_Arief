@@ -31,6 +31,13 @@ class Permintaan extends Model
     public const STATUS_MENUNGGU = 'menunggu';
     public const STATUS_DISETUJUI = 'disetujui';
     public const STATUS_DITOLAK = 'ditolak';
+    public const STATUS_KADALUARSA = 'kadaluarsa';
+
+    public const TERMINAL_STATUSES = [
+        self::STATUS_DISETUJUI,
+        self::STATUS_DITOLAK,
+        self::STATUS_KADALUARSA,
+    ];
 
     // Relasi ke pemohon (user dapur).
     public function pemohon(): BelongsTo

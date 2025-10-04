@@ -1,86 +1,8 @@
-{{-- Partial view untuk konten admin bahan baku tanpa layout --}}
-<div class="py-12">
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-        <!-- Header -->
-        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-            <div class="p-6 text-gray-900">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h1 class="text-2xl font-bold text-gray-900">Manajemen Bahan Baku</h1>
-                        <p class="text-gray-600">Kelola semua kebutuhan bahan baku</p>
-                    </div>
-                    <button data-action="open-modal" data-target="modal-tambah"
-                            class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                        <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Tambah Bahan Baku
-                    </button>
-                </div>
-            </div>
-        </div>
+@php($showCreate = $showCreate ?? true)
 
-        <!-- Bahan Baku Table -->
-        <x-table.wrapper 
-            id="tabel-bahan-baku"
-            :headers="['Nama', 'Kategori', 'Jumlah', 'Satuan', 'Tanggal Masuk', 'Tanggal Kadaluarsa', 'Status', 'Aksi']"
-            empty-message="Belum ada bahan baku yang terdaftar">
-            @foreach(App\Models\BahanBaku::latest()->get() as $bb)
-            @php
-                $status = \App\Models\BahanBaku::determineStatus($bb->jumlah, $bb->tanggal_kadaluarsa);
-                $statusLabel = str_replace('_', ' ', $status);
-                $tanggalMasukLabel = $bb->tanggal_masuk ? $bb->tanggal_masuk->format('d M Y') : '-';
-                $tanggalKadaluarsaLabel = $bb->tanggal_kadaluarsa ? $bb->tanggal_kadaluarsa->format('d M Y') : '-';
-            @endphp
-            <tr class="hover:bg-gray-50" data-bahan-baku-id="{{ $bb->id }}">
-                <td class="px-6 py-4 whitespace-nowrap">{{ $bb->nama }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $bb->kategori }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $bb->jumlah }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $bb->satuan }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $tanggalMasukLabel }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $tanggalKadaluarsaLabel }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span class="capitalize">{{ $statusLabel }}</span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <x-table.actions 
-                        view-url="{{ route('admin.bahan_baku.show', $bb) }}"
-                        edit-url="{{ route('admin.bahan_baku.update', $bb) }}"
-                        :edit-data="[
-                            'id' => $bb->id,
-                            'nama' => $bb->nama,
-                            'kategori' => $bb->kategori,
-                            'jumlah' => $bb->jumlah,
-                            'satuan' => $bb->satuan,
-                            'jumlah_label' => $bb->jumlah . ' ' . $bb->satuan,
-                            'status' => $status,
-                            'status_label' => $statusLabel,
-                            'tanggal_masuk_label' => $tanggalMasukLabel,
-                            'tanggal_kadaluarsa_label' => $tanggalKadaluarsaLabel,
-                        ]"
-                        delete-url="{{ route('admin.bahan_baku.destroy', $bb) }}"
-                        :delete-name="$bb->nama"
-                        :delete-id="$bb->id"
-                        :delete-data="[
-                            'kategori' => $bb->kategori,
-                            'jumlah' => $bb->jumlah,
-                            'satuan' => $bb->satuan,
-                            'jumlah_label' => $bb->jumlah . ' ' . $bb->satuan,
-                            'status' => $status,
-                            'status_label' => $statusLabel,
-                            'tanggal_masuk_label' => $tanggalMasukLabel,
-                            'tanggal_kadaluarsa_label' => $tanggalKadaluarsaLabel,
-                            'can_delete' => $status === 'kadaluarsa' ? 'true' : 'false',
-                        ]" />
-                </td>
-            </tr>
-            @endforeach
-        </x-table.wrapper>
-    </div>
-</div>
-
-<!-- Modal Tambah Bahan Baku -->
+@if($showCreate)
 <x-modal.base id="modal-tambah" title="Tambah Bahan Baku Baru" size="md">
+    <div class="modal-content-compact">
     <form method="POST" action="{{ route('admin.bahan_baku.store') }}" id="form-tambah" class="ajax-form" data-entity="bahan-baku">
         @csrf
         <x-form.input 
@@ -113,14 +35,12 @@
             name="tanggal_masuk" 
             type="date"
             label="Tanggal Masuk" 
-            placeholder="Masukkan tanggal masuk"
             required />
 
         <x-form.input 
             name="tanggal_kadaluarsa" 
             type="date"
             label="Tanggal Kadaluarsa" 
-            placeholder="Masukkan tanggal kadaluarsa"
             required />
 
         <div class="flex items-center justify-end pt-4 border-t border-gray-200">
@@ -134,10 +54,12 @@
             </button>
         </div>
     </form>
+    </div>
 </x-modal.base>
+@endif
 
-<!-- Modal Update Stok Bahan Baku -->
 <x-modal.base id="modal-edit" title="Update Stok Bahan Baku" size="md">
+    <div class="modal-content-compact">
     <form method="POST" action="" id="form-edit" class="ajax-form" data-entity="bahan-baku">
         @csrf
         @method('PUT')
@@ -177,6 +99,10 @@
                 placeholder="Masukkan jumlah stok terbaru"
                 min="0"
                 required />
+
+            <div class="hidden text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-4 py-3" data-edit-warning>
+                Bahan baku kadaluarsa hanya bisa dihapus. Silakan gunakan aksi hapus.
+            </div>
         </div>
 
         <div class="flex items-center justify-end pt-4 border-t border-gray-200">
@@ -190,20 +116,18 @@
             </button>
         </div>
     </form>
+    </div>
 </x-modal.base>
 
-<!-- Modal Konfirmasi Hapus -->
 <x-modal.base id="modal-hapus" title="Konfirmasi Hapus" size="sm">
     <div class="text-center">
-        <svg class="mx-auto h-12 w-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.996-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
-        </svg>
-        
-        <h3 class="mt-2 text-lg font-medium text-gray-900">Hapus Bahan Baku</h3>
-        <p class="mt-2 text-sm text-gray-500">
+        <x-heroicon-o-exclamation-triangle class="mx-auto h-10 w-10 text-red-400 mb-3" />
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Hapus Bahan Baku</h3>
+        <p class="text-sm text-gray-500">
             Apakah Anda yakin ingin menghapus bahan baku <strong id="nama-item"></strong>? 
             Tindakan ini tidak dapat dibatalkan.
         </p>
+    </div>
 
     <form method="POST" action="" id="form-hapus" class="mt-4 ajax-form" data-entity="bahan-baku">
         @csrf
@@ -245,5 +169,4 @@
             </button>
         </div>
     </form>
-    </div>
 </x-modal.base>

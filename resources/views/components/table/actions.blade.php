@@ -51,10 +51,11 @@
 @once
 @push('scripts')
 <script>
-(function() {
+(function () {
     if (window.__tableActionsBound) {
         return;
     }
+
     window.__tableActionsBound = true;
 
     const humanize = (value) => {
@@ -62,11 +63,44 @@
             return '-';
         }
 
-        return value.toString()
+        return value
+            .toString()
             .replace(/_/g, ' ')
             .replace(/\s+/g, ' ')
             .trim()
             .replace(/\b\w/g, (char) => char.toUpperCase());
+    };
+
+    const fillDatasetFields = (container, attribute, dataset, transformer = (val) => val) => {
+        container.querySelectorAll(attribute).forEach((field) => {
+            const key = field.dataset.field || field.dataset.deleteField;
+            if (!key) {
+                return;
+            }
+
+            const datasetKey = key.charAt(0).toLowerCase() + key.slice(1);
+            let value = dataset[datasetKey];
+
+            if (key.toLowerCase().includes('status')) {
+                value = humanize(value || dataset.status);
+            }
+
+            if (key === 'jumlahLabel' && (!value || value === '-') && dataset.jumlah && dataset.satuan) {
+                value = `${dataset.jumlah} ${dataset.satuan}`;
+            }
+
+            field.textContent = transformer(value) || '-';
+        });
+    };
+
+    const toggleSubmitState = (button, enabled) => {
+        if (!button) {
+            return;
+        }
+
+        button.disabled = !enabled;
+        button.classList.toggle('opacity-60', !enabled);
+        button.classList.toggle('cursor-not-allowed', !enabled);
     };
 
     const openEditModal = (button) => {
@@ -84,44 +118,39 @@
         form.action = data.action || '';
 
         const jumlahInput = form.querySelector('[name="jumlah"]');
-        if (jumlahInput && typeof data.jumlah !== 'undefined') {
-            jumlahInput.value = data.jumlah;
+        if (jumlahInput) {
+            const jumlahValue = typeof data.jumlah !== 'undefined' ? data.jumlah : (typeof data.jumlahValue !== 'undefined' ? data.jumlahValue : '');
+            jumlahInput.value = jumlahValue;
         }
 
-        const displayFields = modal.querySelectorAll('[data-field]');
-        displayFields.forEach((field) => {
-            const key = field.dataset.field;
-            if (!key) {
-                return;
-            }
+        fillDatasetFields(modal, '[data-field]', data, (value) => value || '-');
 
-            const datasetKey = key.charAt(0).toLowerCase() + key.slice(1);
-            let value = data[datasetKey];
-
-            if (key.toLowerCase().includes('status')) {
-                value = humanize(value || data.status);
-            }
-
-            if (key === 'jumlahLabel' && (!value || value === '-') && data.jumlah && data.satuan) {
-                value = `${data.jumlah} ${data.satuan}`;
-            }
-
-            field.textContent = value || '-';
-        });
+        const statusRaw = (data.status || '').toLowerCase();
+        const statusLabel = (data.statusLabel || '').toLowerCase();
+        const isExpired = statusRaw === 'kadaluarsa' || statusLabel === 'kadaluarsa';
 
         const submitButton = form.querySelector('button[type="submit"]');
-        if (submitButton) {
-            submitButton.disabled = false;
-            submitButton.classList.remove('opacity-60', 'cursor-not-allowed');
-        }
+        const warningBox = modal.querySelector('[data-edit-warning]');
 
         if (jumlahInput) {
-            jumlahInput.focus();
-            jumlahInput.select();
+            jumlahInput.disabled = isExpired;
+        }
+
+        toggleSubmitState(submitButton, !isExpired);
+
+        if (warningBox) {
+            warningBox.classList.toggle('hidden', !isExpired);
         }
 
         if (typeof window.openModal === 'function') {
             window.openModal('modal-edit');
+        }
+
+        if (jumlahInput && !jumlahInput.disabled) {
+            setTimeout(() => {
+                jumlahInput.focus();
+                jumlahInput.select();
+            }, 120);
         }
     };
 
@@ -145,46 +174,52 @@
         form.action = data.action || '';
         form.dataset.targetId = data.id || '';
 
-        const detailFields = modal.querySelectorAll('[data-delete-field]');
-        detailFields.forEach((field) => {
-            const key = field.dataset.deleteField;
-            if (!key) {
-                return;
+        fillDatasetFields(modal, '[data-delete-field]', data, (value) => value || '-');
+
+        const statusRaw = (data.status || '').toLowerCase();
+        const statusLabel = (data.statusLabel || '').toLowerCase();
+        const isoDate = data.tanggalKadaluarsaIso;
+
+        const expiredByStatus = statusRaw === 'kadaluarsa' || statusLabel === 'kadaluarsa';
+
+        const expiredByDate = (() => {
+            if (!isoDate) {
+                return false;
             }
+            const today = new Date();
+            const expiry = new Date(`${isoDate}T00:00:00`);
+            return !Number.isNaN(expiry.getTime()) && today >= expiry;
+        })();
 
-            const datasetKey = key.charAt(0).toLowerCase() + key.slice(1);
-            let value = data[datasetKey];
-
-            if (key.toLowerCase().includes('status')) {
-                value = humanize(data.statusLabel || data.status);
-            }
-
-            if (key === 'jumlahLabel' && (!value || value === '-') && data.jumlah && data.satuan) {
-                value = `${data.jumlah} ${data.satuan}`;
-            }
-
-            field.textContent = value || '-';
-        });
-
+        const explicitFlag = ['true', '1', true, 1].includes(data.canDelete);
+        const canDelete = expiredByStatus || expiredByDate || explicitFlag;
         const warningBox = modal.querySelector('[data-delete-warning]');
         const submitButton = form.querySelector('button[type="submit"]');
-        const canDelete = data.canDelete === 'true' || data.status === 'kadaluarsa';
-
-        if (submitButton) {
-            submitButton.disabled = !canDelete;
-            submitButton.classList.toggle('opacity-60', !canDelete);
-            submitButton.classList.toggle('cursor-not-allowed', !canDelete);
-        }
 
         if (warningBox) {
-            if (!canDelete) {
-                warningBox.classList.remove('hidden');
-                warningBox.textContent = 'Status saat ini bukan kadaluarsa. Bahan baku hanya bisa dihapus ketika statusnya kadaluarsa.';
-            } else {
+            if (canDelete) {
                 warningBox.classList.add('hidden');
                 warningBox.textContent = '';
+            } else {
+                warningBox.classList.remove('hidden');
+                const infoStatus = [statusRaw, statusLabel]
+                    .filter(Boolean)
+                    .map((value) => value.replace(/_/g, ' '))
+                    .join(' / ');
+                const messageParts = [
+                    'Status saat ini belum kadaluarsa, silakan periksa kembali tanggal kadaluarsa.',
+                ];
+                if (isoDate) {
+                    messageParts.push(`Tanggal kadaluarsa: ${isoDate}`);
+                }
+                if (infoStatus) {
+                    messageParts.push(`Status terdeteksi: ${infoStatus}`);
+                }
+                warningBox.textContent = messageParts.join(' ');
             }
         }
+
+        toggleSubmitState(submitButton, canDelete);
 
         if (typeof window.openModal === 'function') {
             window.openModal('modal-hapus');
@@ -196,6 +231,7 @@
         if (editButton) {
             event.preventDefault();
             openEditModal(editButton);
+            return;
         }
 
         const deleteButton = event.target.closest('.tombol-hapus-native');

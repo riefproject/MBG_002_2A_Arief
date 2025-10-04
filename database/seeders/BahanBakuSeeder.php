@@ -124,5 +124,16 @@ class BahanBakuSeeder extends Seeder
                 'created_at' => '2025-09-10 09:45:00',
             ],
         ]);
+
+        if (DB::connection()->getDriverName() === 'pgsql') {
+            $maxId = DB::table('bahan_baku')->max('id');
+
+            if ($maxId === null) {
+                DB::statement("SELECT setval(pg_get_serial_sequence('bahan_baku','id'), 1, false)");
+            } else {
+                $maxId = (int) $maxId;
+                DB::statement("SELECT setval(pg_get_serial_sequence('bahan_baku','id'), {$maxId}, true)");
+            }
+        }
     }
 }
