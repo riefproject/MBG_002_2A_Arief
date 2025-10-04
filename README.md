@@ -30,8 +30,8 @@ Sistem Manajemen Bahan Baku untuk Program Makan Bergizi Gratis (SIMA Bahan Baku 
 ## Cara Jalanin Lokal
 1. Clone repo ini
    ```bash
-   git clone <repo-url>
-   cd <repo>
+   git clone https://github.com/riefproject/MBG_002_2A_Arief
+   cd MBG_002_2A_Arief
    ```
 2. Pasang dependensi PHP & JS
    ```bash
@@ -50,7 +50,7 @@ Sistem Manajemen Bahan Baku untuk Program Makan Bergizi Gratis (SIMA Bahan Baku 
 5. Jalankan server & Vite
    ```bash
    # jalankan ini di 2 terminal berbeda
-   
+
    php artisan serve # terminal 1
    npm run dev       # terminal lainnya
    ```
@@ -66,10 +66,6 @@ Sistem Manajemen Bahan Baku untuk Program Makan Bergizi Gratis (SIMA Bahan Baku 
 | `permintaan` | `permintaan_pemohon_id_foreign` | Foreign Key (FK) | Mendefinisikan perilaku `ON DELETE CASCADE`; jika data `user` dihapus, semua `permintaan` terkait akan ikut terhapus. |
 | `permintaan_detail` | `permintaan_detail_permintaan_id_foreign`| Foreign Key (FK) | Mendefinisikan perilaku `ON DELETE CASCADE`; jika data `permintaan` induk dihapus, semua item detailnya akan ikut terhapus. |
 | `permintaan_detail` | `permintaan_detail_bahan_id_foreign` | Foreign Key (FK) | Mendefinisikan perilaku `ON DELETE SET NULL` untuk menjaga riwayat permintaan meskipun data master `bahan_baku` dihapus. |
-
-## Catatan Teknis
-- Middleware `RefreshPermintaanStatus` otomatis nge-set permintaan telat jadi `kadaluarsa` per sesi login (sekali sehari per user).
-- Komponen toast tinggal memanfaatkan flash session (`success`, `error`, dsb.) tanpa markup ekstra.
 
 ## Lisensi
 Distribusi mengikuti ketentuan [MIT License](LICENSE).
